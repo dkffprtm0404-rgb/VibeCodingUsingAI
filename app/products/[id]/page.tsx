@@ -1,12 +1,12 @@
 /**
- * app/products/[id]/page.tsx — 상품 상세 페이지
+ * app/products/[id]/page.tsx — 상품 상세 페이지 (Supabase Auth 버전)
  */
 
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { auth } from '@/lib/auth'
+import { createClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/Badge'
 import { AddToCartSection } from '@/components/features/product/AddToCartSection'
 import { MOCK_PRODUCTS } from '@/lib/mock-data'
@@ -28,8 +28,11 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
   const product = MOCK_PRODUCTS.find((p) => p.id === Number(id))
   if (!product) notFound()
 
-  const session = await auth()
-  const isLoggedIn = !!session
+  // Supabase 세션으로 로그인 여부 확인
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const isLoggedIn = !!user
+
   const stockStatus = getStockStatus(product.stock)
 
   return (
@@ -44,7 +47,6 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
 
-        {/* 이미지 */}
         <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100">
           <Image
             src={product.imageUrl}
@@ -61,33 +63,22 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
           )}
         </div>
 
-        {/* 상품 정보 */}
         <div className="flex flex-col space-y-6">
           <Badge variant="secondary">{product.category}</Badge>
-
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-snug">
-            {product.name}
-          </h1>
-
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-snug">{product.name}</h1>
           <p className="text-3xl font-bold text-gray-900">{formatPrice(product.price)}</p>
-
           <p className={`text-sm font-medium ${stockStatus.color}`}>
             {stockStatus.label}
             {product.stock > 0 && product.stock <= 10 && (
               <span className="ml-2 text-gray-400">(잔여 {product.stock}개)</span>
             )}
           </p>
-
           <hr className="border-gray-200" />
-
           <div className="space-y-2">
             <h2 className="text-sm font-semibold text-gray-700">상품 설명</h2>
             <p className="text-gray-600 leading-relaxed text-sm">{product.description}</p>
           </div>
-
           <hr className="border-gray-200" />
-
-          {/* product 전체 객체 전달 (Zustand에서 상품 정보 필요) */}
           <AddToCartSection product={product} isLoggedIn={isLoggedIn} />
         </div>
       </div>

@@ -1,11 +1,12 @@
 'use client'
 /**
- * LoginForm.tsx — 로그인 폼 컴포넌트 (Client Component)
+ * LoginForm.tsx — 로그인 폼 (Supabase Auth 버전)
+ *
+ * NextAuth 대신 Supabase Auth API를 직접 호출합니다.
  */
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { signIn } from 'next-auth/react'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
 
@@ -24,19 +25,21 @@ export function LoginForm() {
     setError('')
     setIsLoading(true)
 
-    const result = await signIn('credentials', {
-      email,
-      password,
-      redirect: false,
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
     })
 
+    const data = await res.json()
     setIsLoading(false)
 
-    if (result?.error) {
-      setError('이메일 또는 비밀번호가 올바르지 않아요.')
+    if (!res.ok) {
+      setError(data.error)
       return
     }
 
+    // 로그인 성공 → 페이지 새로고침 후 이동 (세션 반영)
     router.push(callbackUrl)
     router.refresh()
   }
@@ -44,7 +47,6 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
 
-      {/* 이메일 */}
       <div className="space-y-1.5">
         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
           이메일
@@ -54,7 +56,7 @@ export function LoginForm() {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="test@test.com"
+          placeholder="example@email.com"
           required
           className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm
                      outline-none transition-colors
@@ -63,7 +65,6 @@ export function LoginForm() {
         />
       </div>
 
-      {/* 비밀번호 */}
       <div className="space-y-1.5">
         <label htmlFor="password" className="block text-sm font-medium text-gray-700">
           비밀번호
@@ -82,7 +83,6 @@ export function LoginForm() {
         />
       </div>
 
-      {/* 에러 메시지 */}
       {error && (
         <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
           <span className="text-sm">⚠️</span>
@@ -90,19 +90,10 @@ export function LoginForm() {
         </div>
       )}
 
-      {/* 로그인 버튼 */}
       <Button type="submit" size="lg" className="w-full" isLoading={isLoading}>
         로그인
       </Button>
 
-      {/* 테스트 계정 안내 */}
-      <div className="p-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-        <p className="text-xs text-gray-500 text-center">
-          🧪 테스트 계정: <span className="font-mono font-medium">test@test.com</span> / <span className="font-mono font-medium">1234</span>
-        </p>
-      </div>
-
-      {/* 회원가입 링크 */}
       <p className="text-center text-sm text-gray-500">
         아직 계정이 없으신가요?{' '}
         <Link href="/signup" className="font-medium text-gray-900 hover:underline underline-offset-2">

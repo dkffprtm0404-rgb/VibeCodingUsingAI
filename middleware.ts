@@ -1,52 +1,57 @@
 /**
- * middleware.ts — Next.js 미들웨어
+ * middleware.ts — Next.js 미들웨어 (Supabase Auth 버전)
  *
- * 모든 요청이 페이지에 도달하기 전에 실행되는 코드입니다.
- * 여기서 로그인 여부를 체크해서 미로그인 시 로그인 페이지로 리다이렉트합니다.
- *
- * 실무 패턴:
- * - 보호가 필요한 라우트(장바구니, 마이페이지 등)는 미들웨어에서 체크
- * - 페이지 컴포넌트 안에서 체크하면 페이지가 잠깐 보였다 사라지는 문제 발생
- * - 미들웨어에서 체크하면 서버 레벨에서 차단 (더 안전하고 깔끔)
+ * 모든 요청에서 Supabase 세션을 갱신하고
+ * 보호된 경로는 미로그인 시 /login으로 리다이렉트합니다.
  */
 
-import { auth } from '@/lib/auth'
-import { NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-/**
- * 로그인이 필요한 경로 목록
- * 이 경로들은 미로그인 시 /login 으로 리다이렉트됩니다.
- */
-const PROTECTED_ROUTES = [
-  '/cart',       // 장바구니
-  '/orders',     // 주문 내역
-  '/mypage',     // 마이페이지
-]
+// 로그인이 필요한 경로
+const PROTECTED_ROUTES = ['/cart', '/orders', '/mypage']
 
-export default auth((req) => {
-  const { pathname } = req.nextUrl
-  const isLoggedIn = !!req.auth // req.auth가 있으면 로그인 상태
+export async function middleware(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({ request })
 
-  // 보호된 경로인지 확인
-  const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
-    pathname.startsWith(route)
+  // 미들웨어용 Supabase 클라이언트 (쿠키 직접 조작)
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          )
+          supabaseResponse = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
   )
 
-  // 미로그인 상태에서 보호된 경로 접근 시 → 로그인 페이지로 리다이렉트
-  if (isProtectedRoute && !isLoggedIn) {
-    const loginUrl = new URL('/login', req.url)
-    // callbackUrl: 로그인 후 원래 가려던 페이지로 돌아오기 위한 파라미터
+  // 세션 갱신 (반드시 호출해야 토큰 자동 갱신됨)
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const { pathname } = request.nextUrl
+  const isProtectedRoute = PROTECTED_ROUTES.some((r) => pathname.startsWith(r))
+
+  // 미로그인 + 보호된 경로 → 로그인 페이지로
+  if (isProtectedRoute && !user) {
+    const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('callbackUrl', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  return NextResponse.next()
-})
+  return supabaseResponse
+}
 
-/**
- * matcher: 미들웨어가 실행될 경로 패턴
- * 정적 파일(_next, favicon 등)은 제외해서 성능 낭비 방지
- */
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 }
