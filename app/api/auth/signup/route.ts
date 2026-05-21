@@ -1,5 +1,8 @@
 /**
  * app/api/auth/signup/route.ts — 회원가입 API
+ *
+ * 회원가입 후 이메일 인증 없이 바로 로그인 처리
+ * signUp → signInWithPassword 연속 호출로 세션 즉시 발급
  */
 
 import { createClient } from '@/lib/supabase/server'
@@ -24,7 +27,8 @@ export async function POST(request: Request) {
 
     const supabase = await createClient()
 
-    const { data, error } = await supabase.auth.signUp({
+    // 1단계: 회원가입
+    const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -32,14 +36,29 @@ export async function POST(request: Request) {
       },
     })
 
-    if (error) {
-      if (error.message.includes('already registered')) {
+    if (signUpError) {
+      if (signUpError.message.includes('already registered')) {
         return NextResponse.json({ error: '이미 사용 중인 이메일이에요.' }, { status: 400 })
       }
-      return NextResponse.json({ error: error.message }, { status: 400 })
+      return NextResponse.json({ error: signUpError.message }, { status: 400 })
     }
 
-    return NextResponse.json({ user: data.user }, { status: 201 })
+    /**
+     * 2단계: 회원가입 직후 바로 로그인
+     * Supabase 이메일 인증이 켜져 있어도
+     * signUp 직후엔 임시 세션이 발급되므로 바로 로그인 가능
+     */
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (signInError) {
+      // 로그인 실패해도 회원가입은 성공 → 로그인 페이지로 안내
+      return NextResponse.json({ requireLogin: true }, { status: 201 })
+    }
+
+    return NextResponse.json({ user: signInData.user, autoLogin: true }, { status: 201 })
   } catch {
     return NextResponse.json({ error: '서버 오류가 발생했어요. 다시 시도해주세요.' }, { status: 500 })
   }

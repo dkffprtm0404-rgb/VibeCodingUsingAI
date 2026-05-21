@@ -1,8 +1,10 @@
 'use client'
 /**
- * SignUpForm.tsx — 회원가입 폼 (Supabase Auth 버전)
+ * SignUpForm.tsx — 회원가입 폼
  *
- * Supabase 정책상 비밀번호 최소 6자 필요
+ * 회원가입 성공 시:
+ * - autoLogin: true → 바로 홈으로 이동
+ * - requireLogin: true → 이메일 인증 필요 안내 후 로그인 페이지로
  */
 
 import { useState } from 'react'
@@ -10,7 +12,6 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
 
-// Supabase 비밀번호 최소 길이 상수로 관리
 const MIN_PASSWORD_LENGTH = 6
 
 export function SignUpForm() {
@@ -34,7 +35,6 @@ export function SignUpForm() {
       setError(`비밀번호는 ${MIN_PASSWORD_LENGTH}자 이상이어야 해요.`)
       return
     }
-
     if (password !== passwordConfirm) {
       setError('비밀번호가 일치하지 않아요.')
       return
@@ -56,22 +56,25 @@ export function SignUpForm() {
       return
     }
 
-    router.push('/login?signup=success')
+    if (data.autoLogin) {
+      // 자동 로그인 성공 → 홈으로
+      router.push('/')
+      router.refresh()
+    } else {
+      // 이메일 인증 필요 → 로그인 페이지로
+      router.push('/login?signup=success')
+    }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
 
-      {/* 이름 */}
       <div className="space-y-1.5">
         <label htmlFor="name" className="block text-sm font-medium text-gray-700">이름</label>
         <input
-          id="name"
-          type="text"
-          value={name}
+          id="name" type="text" value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="홍길동"
-          required
+          placeholder="홍길동" required
           className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm
                      outline-none transition-colors
                      focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10
@@ -79,16 +82,12 @@ export function SignUpForm() {
         />
       </div>
 
-      {/* 이메일 */}
       <div className="space-y-1.5">
         <label htmlFor="email" className="block text-sm font-medium text-gray-700">이메일</label>
         <input
-          id="email"
-          type="email"
-          value={email}
+          id="email" type="email" value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="example@email.com"
-          required
+          placeholder="example@email.com" required
           className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm
                      outline-none transition-colors
                      focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10
@@ -96,49 +95,40 @@ export function SignUpForm() {
         />
       </div>
 
-      {/* 비밀번호 */}
       <div className="space-y-1.5">
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">비밀번호</label>
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          비밀번호
+        </label>
         <input
-          id="password"
-          type="password"
-          value={password}
+          id="password" type="password" value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="6자 이상 입력해주세요"
-          required
-          className={`
-            w-full px-4 py-3 rounded-xl border text-sm outline-none transition-colors
+          placeholder="6자 이상 입력해주세요" required
+          className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-colors
             placeholder:text-gray-400
             ${isPasswordTooShort
               ? 'border-red-400 focus:ring-2 focus:ring-red-400/10'
               : 'border-gray-300 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10'
-            }
-          `}
+            }`}
         />
-        {/* 실시간 길이 체크 */}
         {isPasswordTooShort && (
           <p className="text-xs text-red-500">비밀번호는 6자 이상이어야 해요.</p>
         )}
       </div>
 
-      {/* 비밀번호 확인 */}
       <div className="space-y-1.5">
-        <label htmlFor="passwordConfirm" className="block text-sm font-medium text-gray-700">비밀번호 확인</label>
+        <label htmlFor="passwordConfirm" className="block text-sm font-medium text-gray-700">
+          비밀번호 확인
+        </label>
         <input
-          id="passwordConfirm"
-          type="password"
-          value={passwordConfirm}
+          id="passwordConfirm" type="password" value={passwordConfirm}
           onChange={(e) => setPasswordConfirm(e.target.value)}
-          placeholder="비밀번호를 다시 입력해주세요"
-          required
-          className={`
-            w-full px-4 py-3 rounded-xl border text-sm outline-none transition-colors
+          placeholder="비밀번호를 다시 입력해주세요" required
+          className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-colors
             placeholder:text-gray-400
             ${isPasswordMismatch
               ? 'border-red-400 focus:ring-2 focus:ring-red-400/10'
               : 'border-gray-300 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10'
-            }
-          `}
+            }`}
         />
         {isPasswordMismatch && (
           <p className="text-xs text-red-500">비밀번호가 일치하지 않아요.</p>
@@ -153,9 +143,7 @@ export function SignUpForm() {
       )}
 
       <Button
-        type="submit"
-        size="lg"
-        className="w-full"
+        type="submit" size="lg" className="w-full"
         isLoading={isLoading}
         disabled={isPasswordMismatch || isPasswordTooShort}
       >
