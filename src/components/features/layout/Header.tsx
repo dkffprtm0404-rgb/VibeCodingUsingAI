@@ -1,16 +1,16 @@
 /**
- * Header.tsx — 공통 헤더 컴포넌트
+ * Header.tsx — 공통 헤더
  *
- * Server Component: 세션 정보를 서버에서 읽어서 로그인 상태 표시
- * 로그인 여부에 따라 "로그인" 버튼 또는 유저 이름 + 로그아웃 표시
+ * Server Component: 세션 정보 읽기
+ * CartIcon은 Zustand 필요 → 별도 Client Component로 분리
  */
 
 import Link from 'next/link'
 import { auth, signOut } from '@/lib/auth'
+import { CartIcon } from './CartIcon'
 import { APP_NAME } from '@/constants'
 
 export async function Header() {
-  // 서버에서 세션 정보 읽기
   const session = await auth()
 
   return (
@@ -30,15 +30,17 @@ export async function Header() {
             </Link>
           </nav>
 
-          {/* 우측: 로그인 상태에 따라 다르게 표시 */}
-          <div className="flex items-center gap-3">
+          {/* 우측 액션 */}
+          <div className="flex items-center gap-2">
+
+            {/* 장바구니 아이콘 (로그인 시에만 표시) */}
+            {session && <CartIcon />}
+
             {session ? (
-              // 로그인 상태
               <>
-                <span className="text-sm text-gray-600 hidden sm:block">
+                <span className="text-sm text-gray-600 hidden sm:block px-2">
                   {session.user?.name ?? session.user?.email}님
                 </span>
-                {/* signOut은 Server Action으로 처리 */}
                 <form
                   action={async () => {
                     'use server'
@@ -54,13 +56,17 @@ export async function Header() {
                 </form>
               </>
             ) : (
-              // 미로그인 상태
-              <Link
-                href="/login"
-                className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                로그인
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+                  로그인
+                </Link>
+                <Link
+                  href="/signup"
+                  className="text-sm bg-black text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                  회원가입
+                </Link>
+              </div>
             )}
           </div>
 

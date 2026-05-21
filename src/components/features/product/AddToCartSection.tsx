@@ -1,11 +1,7 @@
 'use client'
 /**
- * AddToCartSection.tsx — 장바구니 담기 섹션 (Client Component)
- *
- * 실무 패턴:
- * - 로그인 여부를 체크해서 미로그인 시 로그인 페이지로 이동
- * - isLoggedIn prop을 Server Component(page.tsx)에서 받아옴
- *   (Client Component에서 직접 세션 읽으면 불필요한 클라이언트 번들 증가)
+ * AddToCartSection.tsx — 장바구니 담기 섹션
+ * Zustand 스토어와 연결해서 실제로 장바구니에 상품을 추가합니다.
  */
 
 import { useState } from 'react'
@@ -13,53 +9,36 @@ import { useRouter } from 'next/navigation'
 import { QuantitySelector } from './QuantitySelector'
 import { Button } from '@/components/ui/Button'
 import { formatPrice } from '@/lib/utils'
+import { useCartStore } from '@/store/cartStore'
+import type { Product } from '@/types/product'
 
 interface AddToCartSectionProps {
-  productId: number
-  productName: string
-  price: number
-  stock: number
-  isLoggedIn: boolean // Server Component에서 세션 체크 후 전달
+  product: Product
+  isLoggedIn: boolean
 }
 
-export function AddToCartSection({
-  productId,
-  productName,
-  price,
-  stock,
-  isLoggedIn,
-}: AddToCartSectionProps) {
+export function AddToCartSection({ product, isLoggedIn }: AddToCartSectionProps) {
   const router = useRouter()
+  const addItem = useCartStore((state) => state.addItem)
+
   const [quantity, setQuantity] = useState(1)
-  const [isLoading, setIsLoading] = useState(false)
   const [isAdded, setIsAdded] = useState(false)
 
-  const isSoldOut = stock === 0
-  const totalPrice = price * quantity
+  const isSoldOut = product.stock === 0
+  const totalPrice = product.price * quantity
 
-  const handleAddToCart = async () => {
-    // 미로그인 상태 → 로그인 페이지로 이동 (현재 페이지 callbackUrl로 전달)
+  const handleAddToCart = () => {
+    // 미로그인 → 로그인 페이지로
     if (!isLoggedIn) {
-      router.push(`/login?callbackUrl=/products/${productId}`)
+      router.push(`/login?callbackUrl=/products/${product.id}`)
       return
     }
 
-    setIsLoading(true)
+    // Zustand 스토어에 상품 추가
+    addItem(product, quantity)
 
-    /**
-     * TODO: 실제 장바구니 API 연동
-     * await fetch('/api/cart', {
-     *   method: 'POST',
-     *   body: JSON.stringify({ productId, quantity }),
-     * })
-     */
-    await new Promise((resolve) => setTimeout(resolve, 800))
-
-    setIsLoading(false)
     setIsAdded(true)
     setTimeout(() => setIsAdded(false), 2000)
-
-    console.log(`장바구니 담기: ${productName} / 수량 ${quantity}`)
   }
 
   if (isSoldOut) {
@@ -77,13 +56,8 @@ export function AddToCartSection({
       <div className="space-y-2">
         <p className="text-sm font-medium text-gray-700">수량</p>
         <div className="flex items-center gap-4">
-          <QuantitySelector
-            value={quantity}
-            min={1}
-            max={stock}
-            onChange={setQuantity}
-          />
-          <span className="text-sm text-gray-500">최대 {stock}개 구매 가능</span>
+          <QuantitySelector value={quantity} min={1} max={product.stock} onChange={setQuantity} />
+          <span className="text-sm text-gray-500">최대 {product.stock}개 구매 가능</span>
         </div>
       </div>
 
@@ -94,18 +68,8 @@ export function AddToCartSection({
       </div>
 
       {/* 장바구니 담기 버튼 */}
-      <Button
-        size="lg"
-        className="w-full"
-        isLoading={isLoading}
-        onClick={handleAddToCart}
-      >
-        {isAdded
-          ? '✓ 담겼어요!'
-          : isLoggedIn
-            ? '장바구니 담기'
-            : '로그인 후 구매하기' // 미로그인 시 버튼 텍스트 변경
-        }
+      <Button size="lg" className="w-full" onClick={handleAddToCart}>
+        {isAdded ? '✓ 담겼어요!' : isLoggedIn ? '장바구니 담기' : '로그인 후 구매하기'}
       </Button>
 
     </div>

@@ -16,32 +16,25 @@ interface ProductDetailPageProps {
   params: Promise<{ id: string }>
 }
 
-export async function generateMetadata({
-  params,
-}: ProductDetailPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: ProductDetailPageProps): Promise<Metadata> {
   const { id } = await params
   const product = MOCK_PRODUCTS.find((p) => p.id === Number(id))
   if (!product) return { title: '상품을 찾을 수 없습니다' }
   return { title: product.name, description: product.description }
 }
 
-export default async function ProductDetailPage({
-  params,
-}: ProductDetailPageProps) {
+export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { id } = await params
   const product = MOCK_PRODUCTS.find((p) => p.id === Number(id))
   if (!product) notFound()
 
-  // 세션 체크: 로그인 여부를 서버에서 확인 후 Client Component에 전달
   const session = await auth()
   const isLoggedIn = !!session
-
   const stockStatus = getStockStatus(product.stock)
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
-      {/* 뒤로가기 */}
       <Link
         href="/products"
         className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 transition-colors mb-8"
@@ -49,10 +42,9 @@ export default async function ProductDetailPage({
         ← 상품 목록으로
       </Link>
 
-      {/* 2열 레이아웃 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
 
-        {/* 왼쪽: 이미지 */}
+        {/* 이미지 */}
         <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100">
           <Image
             src={product.imageUrl}
@@ -64,14 +56,12 @@ export default async function ProductDetailPage({
           />
           {product.stock === 0 && (
             <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-              <span className="bg-white text-gray-900 font-bold text-lg px-6 py-2 rounded-full">
-                품절
-              </span>
+              <span className="bg-white text-gray-900 font-bold text-lg px-6 py-2 rounded-full">품절</span>
             </div>
           )}
         </div>
 
-        {/* 오른쪽: 상품 정보 */}
+        {/* 상품 정보 */}
         <div className="flex flex-col space-y-6">
           <Badge variant="secondary">{product.category}</Badge>
 
@@ -79,9 +69,7 @@ export default async function ProductDetailPage({
             {product.name}
           </h1>
 
-          <p className="text-3xl font-bold text-gray-900">
-            {formatPrice(product.price)}
-          </p>
+          <p className="text-3xl font-bold text-gray-900">{formatPrice(product.price)}</p>
 
           <p className={`text-sm font-medium ${stockStatus.color}`}>
             {stockStatus.label}
@@ -99,14 +87,8 @@ export default async function ProductDetailPage({
 
           <hr className="border-gray-200" />
 
-          {/* 장바구니 섹션 — 로그인 여부 전달 */}
-          <AddToCartSection
-            productId={product.id}
-            productName={product.name}
-            price={product.price}
-            stock={product.stock}
-            isLoggedIn={isLoggedIn}
-          />
+          {/* product 전체 객체 전달 (Zustand에서 상품 정보 필요) */}
+          <AddToCartSection product={product} isLoggedIn={isLoggedIn} />
         </div>
       </div>
     </div>
