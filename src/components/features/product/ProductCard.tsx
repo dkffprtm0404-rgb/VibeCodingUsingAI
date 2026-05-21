@@ -1,13 +1,16 @@
+'use client'
 /**
  * ProductCard.tsx — 상품 카드 컴포넌트
  *
- * 상품 목록에서 각 상품을 카드 형태로 보여주는 컴포넌트입니다.
+ * 'use client' 이유: 이미지 onError 핸들러(이벤트) 사용
+ *
  * 실무 패턴:
  * - Next.js Image 컴포넌트 사용 (자동 최적화)
- * - Next.js Link 컴포넌트 사용 (클라이언트 사이드 라우팅)
- * - Server Component로 작성 (상호작용 없으므로 'use client' 불필요)
+ * - 이미지 로드 실패 시 fallback UI 처리
+ * - 품절 상태 시각적 표시
  */
 
+import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/Badge'
@@ -19,30 +22,41 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  // 재고 상태 계산 (유틸 함수 활용)
+  // 이미지 로드 실패 상태 관리
+  const [imgError, setImgError] = useState(false)
+
   const stockStatus = getStockStatus(product.stock)
   const isSoldOut = product.stock === 0
 
   return (
-    // Link로 감싸면 카드 전체가 클릭 가능한 링크가 됩니다
     <Link
       href={`/products/${product.id}`}
       className="group block rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-200"
     >
-      {/* 상품 이미지 영역 */}
+      {/* 이미지 영역 */}
       <div className="relative aspect-square bg-gray-100 overflow-hidden">
-        <Image
-          src={product.imageUrl}
-          alt={product.name}
-          fill // fill: 부모 크기에 꽉 차게 (width/height 대신)
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          // sizes: 브라우저가 적절한 크기의 이미지를 로드하도록 힌트 제공 (성능 최적화)
-          className={`
-            object-cover transition-transform duration-300
-            group-hover:scale-105
-            ${isSoldOut ? 'opacity-50' : ''}
-          `}
-        />
+
+        {/* 이미지 로드 실패 시 fallback UI */}
+        {imgError ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+            <span className="text-4xl mb-2">🛍️</span>
+            <span className="text-xs">이미지 없음</span>
+          </div>
+        ) : (
+          <Image
+            src={product.imageUrl}
+            alt={product.name}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className={`
+              object-cover transition-transform duration-300
+              group-hover:scale-105
+              ${isSoldOut ? 'opacity-50' : ''}
+            `}
+            // 이미지 로드 실패 시 fallback 상태로 전환
+            onError={() => setImgError(true)}
+          />
+        )}
 
         {/* 품절 오버레이 */}
         {isSoldOut && (
@@ -53,26 +67,20 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        {/* 카테고리 뱃지 (이미지 위에 오버레이) */}
+        {/* 카테고리 뱃지 */}
         <div className="absolute top-2 left-2">
           <Badge variant="secondary">{product.category}</Badge>
         </div>
       </div>
 
-      {/* 상품 정보 영역 */}
+      {/* 상품 정보 */}
       <div className="p-4 space-y-1">
-        {/* 상품명 */}
         <h3 className="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-gray-600 transition-colors">
-          {/* line-clamp-2: 2줄 초과 시 ... 처리 */}
           {product.name}
         </h3>
-
-        {/* 가격 */}
         <p className="text-base font-bold text-gray-900">
           {formatPrice(product.price)}
         </p>
-
-        {/* 재고 상태 */}
         <p className={`text-xs ${stockStatus.color}`}>
           {stockStatus.label}
         </p>
