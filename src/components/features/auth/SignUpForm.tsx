@@ -2,14 +2,16 @@
 /**
  * SignUpForm.tsx — 회원가입 폼 (Supabase Auth 버전)
  *
- * /api/auth/signup 호출 → Supabase에 유저 생성
- * 성공 시 로그인 페이지로 이동
+ * Supabase 정책상 비밀번호 최소 6자 필요
  */
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
+
+// Supabase 비밀번호 최소 길이 상수로 관리
+const MIN_PASSWORD_LENGTH = 6
 
 export function SignUpForm() {
   const router = useRouter()
@@ -22,10 +24,16 @@ export function SignUpForm() {
   const [isLoading, setIsLoading] = useState(false)
 
   const isPasswordMismatch = passwordConfirm.length > 0 && password !== passwordConfirm
+  const isPasswordTooShort = password.length > 0 && password.length < MIN_PASSWORD_LENGTH
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(`비밀번호는 ${MIN_PASSWORD_LENGTH}자 이상이어야 해요.`)
+      return
+    }
 
     if (password !== passwordConfirm) {
       setError('비밀번호가 일치하지 않아요.')
@@ -48,13 +56,13 @@ export function SignUpForm() {
       return
     }
 
-    // 회원가입 성공 → 로그인 페이지로 이동
     router.push('/login?signup=success')
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
 
+      {/* 이름 */}
       <div className="space-y-1.5">
         <label htmlFor="name" className="block text-sm font-medium text-gray-700">이름</label>
         <input
@@ -71,6 +79,7 @@ export function SignUpForm() {
         />
       </div>
 
+      {/* 이메일 */}
       <div className="space-y-1.5">
         <label htmlFor="email" className="block text-sm font-medium text-gray-700">이메일</label>
         <input
@@ -87,6 +96,7 @@ export function SignUpForm() {
         />
       </div>
 
+      {/* 비밀번호 */}
       <div className="space-y-1.5">
         <label htmlFor="password" className="block text-sm font-medium text-gray-700">비밀번호</label>
         <input
@@ -94,15 +104,24 @@ export function SignUpForm() {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="4자 이상 입력해주세요"
+          placeholder="6자 이상 입력해주세요"
           required
-          className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm
-                     outline-none transition-colors
-                     focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10
-                     placeholder:text-gray-400"
+          className={`
+            w-full px-4 py-3 rounded-xl border text-sm outline-none transition-colors
+            placeholder:text-gray-400
+            ${isPasswordTooShort
+              ? 'border-red-400 focus:ring-2 focus:ring-red-400/10'
+              : 'border-gray-300 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10'
+            }
+          `}
         />
+        {/* 실시간 길이 체크 */}
+        {isPasswordTooShort && (
+          <p className="text-xs text-red-500">비밀번호는 6자 이상이어야 해요.</p>
+        )}
       </div>
 
+      {/* 비밀번호 확인 */}
       <div className="space-y-1.5">
         <label htmlFor="passwordConfirm" className="block text-sm font-medium text-gray-700">비밀번호 확인</label>
         <input
@@ -138,7 +157,7 @@ export function SignUpForm() {
         size="lg"
         className="w-full"
         isLoading={isLoading}
-        disabled={isPasswordMismatch}
+        disabled={isPasswordMismatch || isPasswordTooShort}
       >
         회원가입
       </Button>
