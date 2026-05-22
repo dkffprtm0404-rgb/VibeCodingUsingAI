@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🛍️ MyShop — 패션 쇼핑몰 포트폴리오
 
-## Getting Started
+Next.js 기반 풀스택 쇼핑몰 프로젝트입니다.
 
-First, run the development server:
+## 🚀 기술 스택
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+| 분야 | 기술 |
+|------|------|
+| 프레임워크 | Next.js 16 (App Router) |
+| 언어 | TypeScript |
+| 스타일링 | Tailwind CSS v4 |
+| 데이터베이스 | Supabase (PostgreSQL) |
+| 인증 | Supabase Auth |
+| 상태관리 | Zustand |
+| AI 챗봇 | Anthropic Claude API |
+| 배포 | Docker |
+
+## ✨ 주요 기능
+
+- **상품 목록/검색** — 카테고리 필터 + 키워드 검색
+- **상품 상세** — 이미지, 재고 상태, 연관 상품
+- **장바구니** — Zustand + localStorage 영속성, 무료배송 프로그레스 바
+- **찜하기** — Supabase DB 연동 위시리스트
+- **회원가입/로그인** — Supabase Auth 이메일 인증
+- **주문/결제** — 배송지 입력, 주문 내역 조회
+- **AI 쇼핑 도우미** — Claude API 기반 상품 추천 챗봇
+- **반응형 UI** — 모바일 햄버거 메뉴 포함
+
+## 🏗️ 프로젝트 구조
+
+```
+src/
+├── app/                 # Next.js App Router 페이지
+│   ├── api/            # API Routes
+│   ├── products/       # 상품 목록/상세
+│   ├── cart/           # 장바구니
+│   ├── checkout/       # 주문/결제
+│   ├── orders/         # 주문 내역
+│   ├── mypage/         # 마이페이지 (찜목록)
+│   ├── login/          # 로그인
+│   └── signup/         # 회원가입
+├── components/
+│   ├── ui/             # 공통 UI (Button, Badge)
+│   └── features/       # 기능별 컴포넌트
+├── lib/                # 유틸, Supabase 클라이언트
+├── store/              # Zustand 전역 상태
+└── types/              # TypeScript 타입 정의
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ 로컬 실행
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# 1. 패키지 설치
+npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# 2. 환경변수 설정
+cp .env.example .env.local
+# .env.local 에 실제 값 입력
 
-## Learn More
+# 3. 개발 서버 실행
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 🐳 Docker 실행
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# 빌드 + 실행
+docker-compose up --build
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# 백그라운드 실행
+docker-compose up -d
+```
 
-## Deploy on Vercel
+## 🌐 환경변수
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+`.env.example` 참고
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| 변수 | 설명 |
+|------|------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase 프로젝트 URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon 키 |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role 키 |
+| `ANTHROPIC_API_KEY` | Claude API 키 |
