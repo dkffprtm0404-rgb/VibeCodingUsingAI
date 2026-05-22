@@ -1,9 +1,6 @@
 /**
- * mock-data.ts — 목 데이터
- *
- * 실무에서 백엔드 API가 아직 없을 때 프론트 개발을 먼저 진행하기 위해
- * 가짜 데이터를 만들어두는 파일이에요.
- * 나중에 실제 API 연동 시 이 파일 대신 API 호출로 교체하면 됩니다.
+ * mock-data.ts — 상품 목 데이터
+ * 실제 서비스에서는 DB/API로 교체합니다.
  */
 
 import type { Product } from '@/types/product'
@@ -14,77 +11,187 @@ export const MOCK_PRODUCTS: Product[] = [
     name: '클래식 화이트 티셔츠',
     price: 29000,
     imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80',
+      'https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=800&q=80',
+      'https://images.unsplash.com/photo-1622445275463-afa2ab738c34?w=800&q=80',
+      'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&q=80',
+    ],
     category: '상의',
     description: '어디에나 잘 어울리는 베이직 화이트 티셔츠입니다.',
+    detailDescription: '매일 입고 싶은 기본 중의 기본. 어떤 하의와도 자연스럽게 어울리는 클래식한 화이트 티셔츠입니다. 고중량 순면 소재로 비침 없이 깔끔하게 입을 수 있어요.',
+    material: '100% 순면 (230g/m²)',
+    fit: '레귤러핏 / 어깨 정사이즈 추천',
     stock: 50,
+    sizes: [
+      { size: 'S', measurements: '가슴 92cm / 어깨 40cm / 총장 65cm', stock: 10 },
+      { size: 'M', measurements: '가슴 96cm / 어깨 42cm / 총장 67cm', stock: 20 },
+      { size: 'L', measurements: '가슴 100cm / 어깨 44cm / 총장 69cm', stock: 15 },
+      { size: 'XL', measurements: '가슴 106cm / 어깨 46cm / 총장 71cm', stock: 5 },
+    ],
   },
   {
     id: 2,
     name: '슬림 블랙 청바지',
     price: 59000,
     imageUrl: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=500&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1542272604-787c3835535d?w=800&q=80',
+      'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=800&q=80',
+      'https://images.unsplash.com/photo-1475178626620-a4d074967452?w=800&q=80',
+    ],
     category: '하의',
     description: '깔끔한 실루엣의 슬림핏 블랙 청바지입니다.',
+    detailDescription: '데님 특유의 질감은 살리면서도 블랙으로 포인트를 준 슬림핏 청바지입니다. 신축성 있는 소재로 활동하기 편하고, 캐주얼부터 세미포멀까지 다양하게 활용할 수 있어요.',
+    material: '98% 면, 2% 스판덱스',
+    fit: '슬림핏 / 허리 정사이즈 또는 한 치수 위 추천',
     stock: 30,
+    sizes: [
+      { size: '28', measurements: '허리 72cm / 엉덩이 92cm / 밑위 25cm / 총장 98cm', stock: 8 },
+      { size: '30', measurements: '허리 76cm / 엉덩이 96cm / 밑위 26cm / 총장 99cm', stock: 12 },
+      { size: '32', measurements: '허리 82cm / 엉덩이 100cm / 밑위 27cm / 총장 100cm', stock: 7 },
+      { size: '34', measurements: '허리 88cm / 엉덩이 104cm / 밑위 28cm / 총장 101cm', stock: 3 },
+    ],
   },
   {
     id: 3,
     name: '오버핏 후드 집업',
     price: 79000,
     imageUrl: 'https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=500&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=800&q=80',
+      'https://images.unsplash.com/photo-1565084888279-aca607ecce0c?w=800&q=80',
+      'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800&q=80',
+    ],
     category: '아우터',
     description: '편안한 오버핏 후드 집업. 캐주얼 룩에 딱입니다.',
+    detailDescription: '넉넉한 오버핏 실루엣으로 이너를 어떻게 입어도 자연스럽게 연출됩니다. 두꺼운 기모 소재로 쌀쌀한 날씨에도 따뜻하게 입을 수 있어요. 지퍼 개폐로 스타일에 맞게 다양하게 연출 가능합니다.',
+    material: '80% 면, 20% 폴리에스터 (기모)',
+    fit: '오버핏 / 한 치수 아래 추천',
     stock: 20,
+    sizes: [
+      { size: 'S', measurements: '가슴 108cm / 어깨 48cm / 총장 68cm / 소매 59cm', stock: 5 },
+      { size: 'M', measurements: '가슴 112cm / 어깨 50cm / 총장 70cm / 소매 60cm', stock: 8 },
+      { size: 'L', measurements: '가슴 116cm / 어깨 52cm / 총장 72cm / 소매 61cm', stock: 5 },
+      { size: 'XL', measurements: '가슴 122cm / 어깨 54cm / 총장 74cm / 소매 62cm', stock: 2 },
+    ],
   },
   {
     id: 4,
     name: '린넨 셔츠',
     price: 45000,
     imageUrl: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=500&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=800&q=80',
+      'https://images.unsplash.com/photo-1588359348347-9bc6cbbb689e?w=800&q=80',
+      'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&q=80',
+    ],
     category: '상의',
     description: '여름에 시원한 린넨 소재의 캐주얼 셔츠입니다.',
+    detailDescription: '통기성이 뛰어난 린넨 소재로 더운 여름날에도 쾌적하게 입을 수 있습니다. 자연스러운 린넨 특유의 구김과 질감이 편안한 분위기를 연출해요. 단추를 열어 레이어드로도 활용할 수 있습니다.',
+    material: '100% 린넨',
+    fit: '레귤러핏 / 정사이즈 추천',
     stock: 15,
+    sizes: [
+      { size: 'S', measurements: '가슴 96cm / 어깨 42cm / 총장 72cm / 소매 58cm', stock: 3 },
+      { size: 'M', measurements: '가슴 100cm / 어깨 44cm / 총장 74cm / 소매 59cm', stock: 6 },
+      { size: 'L', measurements: '가슴 106cm / 어깨 46cm / 총장 76cm / 소매 60cm', stock: 4 },
+      { size: 'XL', measurements: '가슴 112cm / 어깨 48cm / 총장 78cm / 소매 61cm', stock: 2 },
+    ],
   },
   {
     id: 5,
     name: '와이드 슬랙스',
     price: 65000,
     imageUrl: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=500&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=800&q=80',
+      'https://images.unsplash.com/photo-1594938298603-c8148c4b4646?w=800&q=80',
+      'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800&q=80',
+    ],
     category: '하의',
     description: '트렌디한 와이드 핏의 슬랙스입니다.',
+    detailDescription: '넓은 통으로 다리를 편안하게 감싸는 와이드 슬랙스입니다. 고급스러운 소재감으로 캐주얼과 포멀 모두 소화 가능해요. 크롭 탑이나 타이트한 이너와 매치하면 더욱 세련되게 연출됩니다.',
+    material: '65% 폴리에스터, 35% 레이온',
+    fit: '와이드핏 / 정사이즈 추천',
     stock: 25,
+    sizes: [
+      { size: '26', measurements: '허리 66cm / 엉덩이 92cm / 허벅지 62cm / 총장 100cm', stock: 5 },
+      { size: '28', measurements: '허리 72cm / 엉덩이 96cm / 허벅지 65cm / 총장 101cm', stock: 10 },
+      { size: '30', measurements: '허리 78cm / 엉덩이 100cm / 허벅지 68cm / 총장 102cm', stock: 7 },
+      { size: '32', measurements: '허리 84cm / 엉덩이 106cm / 허벅지 71cm / 총장 103cm', stock: 3 },
+    ],
   },
   {
     id: 6,
     name: '캐시미어 니트',
     price: 120000,
     imageUrl: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=500&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&q=80',
+      'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&q=80',
+      'https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=800&q=80',
+    ],
     category: '상의',
     description: '부드러운 캐시미어 소재의 프리미엄 니트입니다.',
+    detailDescription: '몽골산 캐시미어 원사를 사용한 프리미엄 니트입니다. 피부에 닿는 느낌이 매우 부드럽고 보온성이 뛰어나 겨울철 필수 아이템이에요. 세탁은 손세탁 또는 드라이클리닝을 권장합니다.',
+    material: '100% 캐시미어 (몽골산)',
+    fit: '레귤러핏 / 정사이즈 추천, 레이어드 원할 시 한 치수 위',
     stock: 10,
+    sizes: [
+      { size: 'S', measurements: '가슴 92cm / 어깨 38cm / 총장 58cm / 소매 56cm', stock: 2 },
+      { size: 'M', measurements: '가슴 96cm / 어깨 40cm / 총장 60cm / 소매 57cm', stock: 4 },
+      { size: 'L', measurements: '가슴 102cm / 어깨 42cm / 총장 62cm / 소매 58cm', stock: 3 },
+      { size: 'XL', measurements: '가슴 108cm / 어깨 44cm / 총장 64cm / 소매 59cm', stock: 1 },
+    ],
   },
   {
     id: 7,
     name: '데님 자켓',
     price: 89000,
     imageUrl: 'https://images.unsplash.com/photo-1601333144130-8cbb312386b6?w=500&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1601333144130-8cbb312386b6?w=800&q=80',
+      'https://images.unsplash.com/photo-1523205771623-e0faa4d2813d?w=800&q=80',
+      'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&q=80',
+    ],
     category: '아우터',
     description: '데일리로 활용하기 좋은 클래식 데님 자켓입니다.',
+    detailDescription: '시즌리스로 활용 가능한 클래식 데님 자켓입니다. 봄/가을엔 단독으로, 겨울엔 두꺼운 이너 위에 레이어드해서 연출할 수 있어요. 세월이 지날수록 자연스러운 워싱감이 생겨 더욱 멋스러워집니다.',
+    material: '100% 면 (12oz 데님)',
+    fit: '레귤러핏 / 이너 두께에 따라 사이즈 선택',
     stock: 0,
+    sizes: [
+      { size: 'S', measurements: '가슴 100cm / 어깨 43cm / 총장 58cm / 소매 58cm', stock: 0 },
+      { size: 'M', measurements: '가슴 104cm / 어깨 45cm / 총장 60cm / 소매 59cm', stock: 0 },
+      { size: 'L', measurements: '가슴 110cm / 어깨 47cm / 총장 62cm / 소매 60cm', stock: 0 },
+      { size: 'XL', measurements: '가슴 116cm / 어깨 49cm / 총장 64cm / 소매 61cm', stock: 0 },
+    ],
   },
   {
     id: 8,
     name: '스트라이프 티셔츠',
     price: 35000,
     imageUrl: 'https://images.unsplash.com/photo-1622445275576-721325763afe?w=500&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1622445275576-721325763afe?w=800&q=80',
+      'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&q=80',
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
+    ],
     category: '상의',
     description: '마린 룩의 클래식 스트라이프 티셔츠입니다.',
+    detailDescription: '프랑스 마린룩에서 영감을 받은 클래식 스트라이프 티셔츠입니다. 해양풍의 감성을 담아 여름철 시원하고 트렌디한 룩을 연출할 수 있어요. 청바지, 흰 팬츠 모두와 잘 어울립니다.',
+    material: '100% 면 (200g/m²)',
+    fit: '레귤러핏 / 정사이즈 추천',
     stock: 3,
+    sizes: [
+      { size: 'S', measurements: '가슴 90cm / 어깨 40cm / 총장 64cm', stock: 1 },
+      { size: 'M', measurements: '가슴 94cm / 어깨 42cm / 총장 66cm', stock: 1 },
+      { size: 'L', measurements: '가슴 98cm / 어깨 44cm / 총장 68cm', stock: 1 },
+      { size: 'XL', measurements: '가슴 104cm / 어깨 46cm / 총장 70cm', stock: 0 },
+    ],
   },
 ]
 
-/**
- * 카테고리 목록 (필터에서 사용)
- */
 export const CATEGORIES = ['전체', '상의', '하의', '아우터'] as const
 export type Category = (typeof CATEGORIES)[number]
