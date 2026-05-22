@@ -1,5 +1,9 @@
 /**
- * middleware.ts — Next.js 미들웨어
+ * proxy.ts — Next.js Proxy (구 middleware)
+ *
+ * Next.js 16에서 middleware → proxy로 변경됨
+ * 모든 요청에서 Supabase 세션을 갱신하고
+ * 보호된 경로는 미로그인 시 /login으로 리다이렉트합니다.
  */
 
 import { createServerClient } from '@supabase/ssr'
@@ -7,7 +11,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 const PROTECTED_ROUTES = ['/cart', '/orders', '/mypage', '/checkout']
 
-export async function middleware(request: NextRequest) {
+// middleware → proxy 로 함수명 변경
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
