@@ -1,22 +1,28 @@
 /**
- * utils.ts — 공통 유틸리티 함수 모음
- *
- * 여러 컴포넌트에서 공통으로 쓰이는 함수들을 모아두는 파일이에요.
- * 실무에서도 이렇게 lib/utils.ts 에 공통 함수를 관리합니다.
+ * utils.ts — 공통 유틸리티 함수
  */
 
+import { clsx, type ClassValue } from 'clsx'
+
 /**
- * 숫자를 한국 원화 형식으로 포맷하는 함수
+ * cn: Tailwind 클래스 병합 유틸
+ * clsx로 조건부 클래스 처리 + 충돌 클래스 자동 해결
+ * @example cn('px-4 py-2', isActive && 'bg-black', 'bg-white') → 'px-4 py-2 bg-white'
+ */
+export function cn(...inputs: ClassValue[]): string {
+  return clsx(inputs)
+}
+
+/**
+ * 숫자를 한국 원화 형식으로 포맷
  * @example formatPrice(29000) → "29,000원"
  */
 export function formatPrice(price: number): string {
-  // Intl.NumberFormat: 브라우저 내장 국제화 API
   return new Intl.NumberFormat('ko-KR').format(price) + '원'
 }
 
 /**
- * 재고 상태 텍스트와 색상을 반환하는 함수
- * @example getStockStatus(0) → { label: '품절', color: 'text-red-500' }
+ * 재고 상태 텍스트와 색상 반환
  */
 export function getStockStatus(stock: number): { label: string; color: string } {
   if (stock === 0) return { label: '품절', color: 'text-red-500' }

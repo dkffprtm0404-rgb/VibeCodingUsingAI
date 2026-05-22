@@ -1,8 +1,6 @@
 'use client'
 /**
- * LogoutButton.tsx — 로그아웃 버튼 (Client Component)
- *
- * 로그아웃 API 호출 후 페이지 새로고침으로 세션 제거
+ * LogoutButton.tsx — 로그아웃 버튼
  */
 
 import { useRouter } from 'next/navigation'
@@ -19,7 +17,7 @@ export function LogoutButton() {
   return (
     <button
       onClick={handleLogout}
-      className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+      className="text-sm font-medium text-gray-500 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-50 transition-all"
     >
       로그아웃
     </button>
