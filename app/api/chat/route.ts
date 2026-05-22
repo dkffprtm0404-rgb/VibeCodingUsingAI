@@ -1,8 +1,14 @@
 /**
  * app/api/chat/route.ts — AI 쇼핑 도우미 챗봇 API
  *
- * Claude API를 사용해서 상품 데이터 기반으로 추천/답변합니다.
- * 스트리밍 응답으로 실시간 타이핑 효과를 제공합니다.
+ * Claude API에 상품 데이터를 주입해서 MyShop 전용 AI로 동작합니다.
+ * 응답에 추천 상품 ID 목록을 포함시켜 클라이언트에서 카드로 렌더링합니다.
+ *
+ * 응답 형식 (JSON):
+ * {
+ *   content: "답변 텍스트",
+ *   recommendedProductIds: [1, 3, 6]  // 추천 상품 ID (없으면 빈 배열)
+ * }
  */
 
 import { NextResponse } from 'next/server'
@@ -16,23 +22,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'API 키가 설정되지 않았어요.' }, { status: 500 })
     }
 
-    // 상품 데이터를 시스템 프롬프트에 주입
     const productContext = MOCK_PRODUCTS.map((p) =>
-      `- ${p.name} (카테고리: ${p.category}, 가격: ${p.price.toLocaleString()}원, 재고: ${p.stock > 0 ? `${p.stock}개` : '품절'}, ID: ${p.id})`
+      `ID:${p.id} | ${p.name} | ${p.category} | ${p.price.toLocaleString()}원 | ${p.stock > 0 ? `재고 ${p.stock}개` : '품절'}`
     ).join('\n')
 
     const systemPrompt = `당신은 MyShop의 친절한 쇼핑 도우미 AI입니다.
-고객의 질문에 답하고 상품을 추천해주세요.
 
-현재 판매 중인 상품 목록:
+현재 판매 중인 상품:
 ${productContext}
 
-답변 규칙:
-- 친절하고 자연스러운 한국어로 답변하세요
-- 상품 추천 시 상품명과 가격을 언급하세요
-- 품절 상품은 추천하지 마세요
-- 답변은 3-4문장으로 간결하게 해주세요
-- 이모지를 적절히 사용해서 친근하게 답변하세요`
+응답 규칙:
+1. 반드시 아래 JSON 형식으로만 응답하세요 (다른 텍스트 금지):
+{
+  "message": "친절한 답변 텍스트 (2-3문장, 이모지 포함)",
+  "productIds": [추천 상품 ID 배열, 없으면 빈 배열]
+}
+
+2. 상품 추천 시:
+   - 재고 있는 상품만 추천 (품절 제외)
+   - 최대 3개까지만 추천
+   - productIds에 해당 상품 ID 숫자로 포함
+
+3. 일반 대화나 상품 무관 질문은 productIds를 빈 배열로
+
+예시:
+{"message": "겨울에 딱 맞는 캐시미어 니트를 추천드려요! 🧶 부드럽고 따뜻해서 인기 상품이에요.", "productIds": [6]}
+`
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -42,7 +57,7 @@ ${productContext}
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001', // 빠르고 저렴한 모델
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 500,
         system: systemPrompt,
         messages: messages.map((m: { role: string; content: string }) => ({
@@ -53,12 +68,33 @@ ${productContext}
     })
 
     const data = await response.json()
-
     if (!response.ok) {
       return NextResponse.json({ error: '챗봇 응답 오류가 발생했어요.' }, { status: 500 })
     }
 
-    return NextResponse.json({ content: data.content[0].text })
+    // Claude 응답에서 JSON 파싱
+    try {
+      const raw = data.content[0].text.trim()
+      // 혹시 마크다운 코드블록으로 감싸진 경우 제거
+      const cleaned = raw.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim()
+      const parsed = JSON.parse(cleaned)
+
+      // 추천된 상품 데이터 조회
+      const recommendedProducts = MOCK_PRODUCTS.filter((p) =>
+        (parsed.productIds ?? []).includes(p.id) && p.stock > 0
+      )
+
+      return NextResponse.json({
+        content: parsed.message,
+        recommendedProducts,
+      })
+    } catch {
+      // JSON 파싱 실패 시 텍스트만 반환
+      return NextResponse.json({
+        content: data.content[0].text,
+        recommendedProducts: [],
+      })
+    }
   } catch {
     return NextResponse.json({ error: '서버 오류가 발생했어요.' }, { status: 500 })
   }
