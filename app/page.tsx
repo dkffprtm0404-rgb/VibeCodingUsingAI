@@ -16,7 +16,6 @@ export default function HomePage() {
 
       {/* 히어로 섹션 */}
       <section className="relative bg-gray-950 text-white overflow-hidden min-h-[600px] flex items-center">
-        {/* 배경 이미지 */}
         <div className="absolute inset-0">
           <Image
             src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=1400&q=60"
@@ -25,10 +24,8 @@ export default function HomePage() {
             className="object-cover opacity-40"
             priority
           />
-          {/* 그라디언트 오버레이 — 텍스트 가독성 향상 */}
           <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-950/60 to-transparent" />
         </div>
-
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32">
           <div className="max-w-lg space-y-6">
             <span className="inline-block text-xs font-semibold tracking-widest uppercase text-gray-400 border border-gray-700 px-3 py-1.5 rounded-full">
@@ -42,11 +39,13 @@ export default function HomePage() {
             <p className="text-gray-400 text-lg leading-relaxed">
               클래식부터 모던까지, 매일 새로운 스타일을 발견하세요.
             </p>
-            <div className="flex gap-3 pt-2">
-              {/* white variant — 어두운 배경에서 명확하게 보임 */}
+            <div className="flex flex-wrap gap-3 pt-2">
               <Link href="/products">
-                <Button variant="white" size="lg">
-                  쇼핑 시작하기 →
+                <Button variant="white" size="lg">쇼핑 시작하기 →</Button>
+              </Link>
+              <Link href="/style-quiz">
+                <Button variant="outline" size="lg" className="border-gray-600 text-white hover:bg-white/10">
+                  ✨ 스타일 진단
                 </Button>
               </Link>
             </div>
@@ -119,6 +118,38 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* AI 스타일 진단 배너 */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-3xl overflow-hidden">
+          <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full -translate-y-36 translate-x-36" />
+          <div className="absolute bottom-0 left-0 w-56 h-56 bg-white/5 rounded-full translate-y-28 -translate-x-28" />
+          <div className="relative px-8 py-12 sm:px-14 flex flex-col sm:flex-row items-center justify-between gap-8">
+            <div className="text-white space-y-4 text-center sm:text-left">
+              <p className="text-xs font-semibold tracking-widest uppercase text-gray-400">
+                ✨ AI Personal Stylist
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-bold">나만의 스타일 유형은?</h2>
+              <p className="text-gray-400 text-sm leading-relaxed max-w-sm">
+                4가지 질문으로 AI가 스타일을 분석하고
+                맞춤 코디와 상품을 추천해드려요
+              </p>
+              <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                {['모던 미니멀리스트', '캐주얼 스트리터', '클래식 엘레강스', '모던 시크'].map((type) => (
+                  <span key={type} className="text-xs px-2.5 py-1 bg-white/10 rounded-full text-gray-300">
+                    {type}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <Link href="/style-quiz" className="flex-shrink-0">
+              <Button variant="white" size="lg" className="whitespace-nowrap">
+                스타일 진단 시작 →
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* 무료배송 배너 */}
       <section className="relative bg-gray-950 text-white py-20 overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -128,17 +159,13 @@ export default function HomePage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-5">
           <p className="text-gray-500 text-xs font-semibold tracking-widest uppercase">Limited Offer</p>
           <h2 className="text-3xl sm:text-5xl font-bold leading-tight">
-            5만원 이상 구매 시
-            <br />
+            5만원 이상 구매 시<br />
             <span className="text-gray-400">무료 배송</span>
           </h2>
           <p className="text-gray-500 text-base">지금 바로 쇼핑하고 배송비를 아껴보세요</p>
           <div className="pt-2">
-            {/* white variant 사용 */}
             <Link href="/products">
-              <Button variant="white" size="lg">
-                지금 쇼핑하기
-              </Button>
+              <Button variant="white" size="lg">지금 쇼핑하기</Button>
             </Link>
           </div>
         </div>
@@ -158,7 +185,7 @@ export default function HomePage() {
               <h3 className="text-sm font-semibold text-gray-900 mb-4">쇼핑</h3>
               <ul className="space-y-2.5 text-sm text-gray-500">
                 <li><Link href="/products" className="hover:text-gray-900 transition-colors">전체 상품</Link></li>
-                <li><Link href="/products" className="hover:text-gray-900 transition-colors">신상품</Link></li>
+                <li><Link href="/style-quiz" className="hover:text-gray-900 transition-colors">스타일 진단</Link></li>
               </ul>
             </div>
             <div>
@@ -179,7 +206,7 @@ export default function HomePage() {
           </div>
           <div className="border-t border-gray-100 pt-8 flex flex-col sm:flex-row items-center justify-between gap-2">
             <p className="text-xs text-gray-400">© 2026 MyShop. All rights reserved.</p>
-            <p className="text-xs text-gray-400">포트폴리오 프로젝트 · Next.js + Supabase</p>
+            <p className="text-xs text-gray-400">포트폴리오 프로젝트 · Next.js + Supabase + Claude AI</p>
           </div>
         </div>
       </footer>

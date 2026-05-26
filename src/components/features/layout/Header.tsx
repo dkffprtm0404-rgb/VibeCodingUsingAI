@@ -1,5 +1,5 @@
 /**
- * Header.tsx — 공통 헤더 (모바일 메뉴 포함)
+ * Header.tsx — 공통 헤더
  */
 
 import Link from 'next/link'
@@ -26,6 +26,13 @@ export async function Header() {
           {/* 데스크탑 네비 */}
           <nav className="hidden md:flex items-center gap-8">
             <Link href="/products" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">상품</Link>
+            {/* AI 스타일 진단 — 차별화 포인트 */}
+            <Link
+              href="/style-quiz"
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1"
+            >
+              <span>✨</span> 스타일 진단
+            </Link>
             {user && (
               <>
                 <Link href="/mypage/wishlist" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">찜목록</Link>
@@ -54,8 +61,6 @@ export async function Header() {
                 </Link>
               </div>
             )}
-
-            {/* 모바일 메뉴 */}
             <MobileMenu isLoggedIn={!!user} userName={displayName} />
           </div>
         </div>
