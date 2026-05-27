@@ -46,8 +46,8 @@ export function CartView() {
           </button>
         </div>
 
-        {items.map(({ product, quantity }) => (
-          <div key={product.id} className="flex gap-4 p-5 bg-white rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors">
+        {items.map(({ product, quantity, selectedSize }) => (
+          <div key={`${product.id}-${selectedSize ?? 'no-size'}`} className="flex gap-4 p-5 bg-white rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors">
             <Link href={`/products/${product.id}`} className="flex-shrink-0">
               <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-gray-100">
                 <Image src={product.imageUrl} alt={product.name} fill sizes="96px" className="object-cover" />
@@ -62,9 +62,14 @@ export function CartView() {
                       {product.name}
                     </h3>
                   </Link>
+                  {selectedSize && (
+                    <span className="inline-block mt-1 px-2 py-0.5 bg-gray-100 rounded text-xs text-gray-500 font-medium">
+                      {selectedSize}
+                    </span>
+                  )}
                 </div>
                 <button
-                  onClick={() => removeItem(product.id)}
+                  onClick={() => removeItem(product.id, selectedSize)}
                   className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-300 hover:text-red-400 hover:bg-red-50 rounded-full transition-all text-lg leading-none"
                 >
                   ×
@@ -75,8 +80,8 @@ export function CartView() {
                 <QuantitySelector
                   value={quantity}
                   min={1}
-                  max={product.stock}
-                  onChange={(val) => updateQuantity(product.id, val)}
+                  max={selectedSize ? (product.sizes.find((s) => s.size === selectedSize)?.stock ?? product.stock) : product.stock}
+                  onChange={(val) => updateQuantity(product.id, val, selectedSize)}
                 />
                 <p className="text-sm font-semibold text-gray-700">{formatPrice(product.price * quantity)}</p>
               </div>

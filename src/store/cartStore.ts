@@ -18,6 +18,7 @@ import type { Product } from '@/types/product'
 interface CartItem {
   product: Product
   quantity: number
+  selectedSize?: string
 }
 
 // 스토어 전체 타입 (상태 + 액션)
@@ -26,9 +27,9 @@ interface CartStore {
   items: CartItem[]
 
   // 액션 (상태를 변경하는 함수들)
-  addItem: (product: Product, quantity?: number) => void
-  removeItem: (productId: number) => void
-  updateQuantity: (productId: number, quantity: number) => void
+  addItem: (product: Product, quantity?: number, selectedSize?: string) => void
+  removeItem: (productId: number, selectedSize?: string) => void
+  updateQuantity: (productId: number, quantity: number, selectedSize?: string) => void
   clearCart: () => void
 
   // 계산된 값 (getter)
@@ -51,32 +52,37 @@ export const useCartStore = create<CartStore>()(
        * - 이미 있는 상품이면 수량만 증가
        * - 없는 상품이면 새로 추가
        */
-      addItem: (product, quantity = 1) => {
+      addItem: (product, quantity = 1, selectedSize) => {
         set((state) => {
-          const existing = state.items.find((i) => i.product.id === product.id)
+          const existing = state.items.find(
+            (i) => i.product.id === product.id && i.selectedSize === selectedSize
+          )
 
           if (existing) {
-            // 이미 있는 상품 → 수량 증가 (재고 초과 방지)
+            const maxStock = selectedSize
+              ? (product.sizes.find((s) => s.size === selectedSize)?.stock ?? product.stock)
+              : product.stock
             return {
               items: state.items.map((i) =>
-                i.product.id === product.id
-                  ? { ...i, quantity: Math.min(i.quantity + quantity, product.stock) }
+                i.product.id === product.id && i.selectedSize === selectedSize
+                  ? { ...i, quantity: Math.min(i.quantity + quantity, maxStock) }
                   : i
               ),
             }
           }
 
-          // 새 상품 추가
-          return { items: [...state.items, { product, quantity }] }
+          return { items: [...state.items, { product, quantity, selectedSize }] }
         })
       },
 
       /**
        * removeItem: 상품 제거
        */
-      removeItem: (productId) => {
+      removeItem: (productId, selectedSize) => {
         set((state) => ({
-          items: state.items.filter((i) => i.product.id !== productId),
+          items: state.items.filter(
+            (i) => !(i.product.id === productId && i.selectedSize === selectedSize)
+          ),
         }))
       },
 
@@ -84,14 +90,14 @@ export const useCartStore = create<CartStore>()(
        * updateQuantity: 수량 변경
        * 수량이 0 이하가 되면 자동으로 제거
        */
-      updateQuantity: (productId, quantity) => {
+      updateQuantity: (productId, quantity, selectedSize) => {
         if (quantity <= 0) {
-          get().removeItem(productId)
+          get().removeItem(productId, selectedSize)
           return
         }
         set((state) => ({
           items: state.items.map((i) =>
-            i.product.id === productId ? { ...i, quantity } : i
+            i.product.id === productId && i.selectedSize === selectedSize ? { ...i, quantity } : i
           ),
         }))
       },

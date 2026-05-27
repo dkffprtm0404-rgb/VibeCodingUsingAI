@@ -25,9 +25,3 @@ export interface Product {
   sizes: SizeInfo[]          // 사이즈별 정보
   stock: number              // 전체 재고 (하위 호환)
 }
-
-export interface CartItem {
-  product: Product
-  quantity: number
-  selectedSize?: string
-}

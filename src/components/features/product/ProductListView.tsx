@@ -4,13 +4,12 @@
  * 검색 + 카테고리 필터 동시 지원
  */
 
-import { useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { Suspense } from 'react'
 import { CategoryFilter } from './CategoryFilter'
 import { ProductGrid } from './ProductGrid'
 import { SearchBar } from './SearchBar'
-import { type Category } from '@/lib/mock-data'
+import { CATEGORIES, type Category } from '@/lib/mock-data'
 import type { Product } from '@/types/product'
 
 interface ProductListViewProps {
@@ -18,9 +17,25 @@ interface ProductListViewProps {
 }
 
 function ProductListContent({ products }: ProductListViewProps) {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const searchQuery = searchParams.get('q')?.toLowerCase() ?? ''
-  const [selectedCategory, setSelectedCategory] = useState<Category>('전체')
+
+  const categoryParam = searchParams.get('cat') as Category | null
+  const selectedCategory: Category =
+    categoryParam && (CATEGORIES as readonly string[]).includes(categoryParam)
+      ? categoryParam
+      : '전체'
+
+  const handleCategoryChange = (category: Category) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (category === '전체') {
+      params.delete('cat')
+    } else {
+      params.set('cat', category)
+    }
+    router.push(`/products?${params.toString()}`)
+  }
 
   // 카테고리 + 검색어 동시 필터링
   const filteredProducts = products.filter((p) => {
@@ -45,7 +60,7 @@ function ProductListContent({ products }: ProductListViewProps) {
           총 <span className="font-semibold text-gray-900">{filteredProducts.length}</span>개의 상품
         </p>
         <div className="order-1 sm:order-2">
-          <CategoryFilter selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} />
+          <CategoryFilter selectedCategory={selectedCategory} onCategoryChange={handleCategoryChange} />
         </div>
       </div>
 

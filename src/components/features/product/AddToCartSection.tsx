@@ -48,7 +48,7 @@ export function AddToCartSection({ product, isLoggedIn }: AddToCartSectionProps)
       return
     }
 
-    addItem(product, quantity)
+    addItem(product, quantity, selectedSize.size)
     setIsAdded(true)
     setTimeout(() => setIsAdded(false), 2000)
   }

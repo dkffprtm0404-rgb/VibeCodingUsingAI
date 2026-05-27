@@ -13,6 +13,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { MOCK_PRODUCTS } from '@/lib/mock-data'
+
+const SHIPPING_FEE = 3000
+const FREE_SHIPPING_THRESHOLD = 50000
 
 export async function POST(request: Request) {
   try {
@@ -24,11 +28,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: '로그인이 필요해요.' }, { status: 401 })
     }
 
-    const { items, shippingInfo, totalPrice, shippingFee } = await request.json()
+    const { items, shippingInfo } = await request.json()
 
     if (!items?.length) {
       return NextResponse.json({ error: '주문 상품이 없어요.' }, { status: 400 })
     }
+
+    // 클라이언트가 보낸 가격을 신뢰하지 않고 서버에서 직접 재계산
+    const computedTotalPrice = items.reduce((sum: number, item: { product: { id: number }; quantity: number }) => {
+      const product = MOCK_PRODUCTS.find((p) => p.id === item.product.id)
+      if (!product) return sum
+      return sum + product.price * item.quantity
+    }, 0)
+
+    if (computedTotalPrice === 0) {
+      return NextResponse.json({ error: '유효한 상품이 없어요.' }, { status: 400 })
+    }
+
+    const computedShippingFee = computedTotalPrice >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE
 
     // Admin 클라이언트 사용 (RLS 우회해서 insert)
     const adminClient = createAdminClient(
@@ -42,8 +59,8 @@ export async function POST(request: Request) {
       .from('orders')
       .insert({
         user_id: user.id,
-        total_price: totalPrice,
-        shipping_fee: shippingFee,
+        total_price: computedTotalPrice,
+        shipping_fee: computedShippingFee,
         receiver_name: shippingInfo.name,
         receiver_phone: shippingInfo.phone,
         receiver_address: shippingInfo.address,
@@ -55,18 +72,19 @@ export async function POST(request: Request) {
 
     if (orderError) throw orderError
 
-    // 2단계: order_items 일괄 삽입
-    const orderItems = items.map((item: {
-      product: { id: number; name: string; price: number; imageUrl: string }
-      quantity: number
-    }) => ({
-      order_id: order.id,
-      product_id: item.product.id,
-      product_name: item.product.name,
-      product_price: item.product.price,
-      product_image: item.product.imageUrl,
-      quantity: item.quantity,
-    }))
+    // 2단계: order_items 일괄 삽입 (가격도 서버 데이터 기준)
+    const orderItems = items.flatMap((item: { product: { id: number }; quantity: number }) => {
+      const product = MOCK_PRODUCTS.find((p) => p.id === item.product.id)
+      if (!product) return []
+      return [{
+        order_id: order.id,
+        product_id: product.id,
+        product_name: product.name,
+        product_price: product.price,
+        product_image: product.imageUrl,
+        quantity: item.quantity,
+      }]
+    })
 
     const { error: itemsError } = await adminClient
       .from('order_items')
