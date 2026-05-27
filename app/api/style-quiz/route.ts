@@ -1,29 +1,10 @@
 /**
  * app/api/style-quiz/route.ts — AI 스타일 진단 API
- *
- * 유저의 답변을 받아 Claude API로 스타일 유형 분석 후
- * 맞춤 코디 + 추천 상품을 반환합니다.
  */
 
 import { NextResponse } from 'next/server'
 import { MOCK_PRODUCTS } from '@/lib/mock-data'
-
-export interface StyleQuizAnswer {
-  situation: string  // 착용 상황
-  fit: string        // 선호 핏
-  vibe: string       // 선호 분위기
-  color: string      // 선호 색감
-}
-
-export interface StyleResult {
-  type: string           // 스타일 유형명
-  emoji: string          // 유형 이모지
-  description: string    // 유형 설명
-  keywords: string[]     // 스타일 키워드
-  coordi: string         // 추천 코디 설명
-  productIds: number[]   // 추천 상품 ID
-  tip: string            // 스타일링 팁
-}
+import type { StyleQuizAnswer, StyleResult } from '@/types/style'
 
 export async function POST(request: Request) {
   try {
@@ -86,7 +67,6 @@ ${productContext}
     const cleaned = raw.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim()
     const result: StyleResult = JSON.parse(cleaned)
 
-    // 추천 상품 데이터 조회
     const recommendedProducts = MOCK_PRODUCTS.filter(
       (p) => result.productIds.includes(p.id) && p.stock > 0
     )
