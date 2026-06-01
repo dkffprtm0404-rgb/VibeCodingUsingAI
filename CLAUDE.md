@@ -1,42 +1,47 @@
-# CLAUDE.md — AI 행동 규칙 (최상위)
+# CLAUDE.md
 
-> 이 파일은 Claude(AI)가 이 프로젝트에서 작업할 때 반드시 따라야 할 규칙입니다.
-> 세부 규칙은 `docs/` 폴더의 각 MD 파일을 참조하세요.
+> 이 파일은 Claude가 이 프로젝트에서 작업할 때 읽는 최상위 지침입니다.
+> **Humans steer. Agents execute.** — OpenAI Harness Engineering 원칙
 
-## 필수 참조 문서
-- 아키텍처/구조: `docs/ARCHITECTURE.md`
-- 코딩 컨벤션: `docs/CONVENTIONS.md`
-- 절대 금지 사항: `docs/DO_NOT.md`
-- Docker 배포: `docs/DOCKER.md`
-- Git 워크플로우: `docs/GIT_WORKFLOW.md`
+@AGENTS.md
 
-## Claude 기본 행동 원칙
+## 프로젝트 컨텍스트
 
-### 1. 코드 작성 전 반드시 확인
+- **서비스**: MyShop — AI 패션 쇼핑몰
+- **스택**: Next.js 16 / TypeScript / Supabase / Tailwind CSS v4 / Zustand / Docker
+- **AI 연동**: Anthropic Claude API (챗봇, 스타일 진단)
+- **배포**: Docker 멀티스테이지 빌드 (80:3000)
+
+## 세부 규칙 참조
+
+| 문서 | 내용 |
+|------|------|
+| `docs/ARCHITECTURE.md` | 폴더 구조, 렌더링 전략, 데이터 흐름 |
+| `docs/CONVENTIONS.md` | 네이밍, 컴포넌트 작성, 커밋 규칙 |
+| `docs/DO_NOT.md` | 절대 금지 패턴 목록 |
+| `docs/GIT_WORKFLOW.md` | 커밋/푸시 규칙 (사용자 승인 필수) |
+| `docs/DOCKER.md` | Docker 빌드 및 배포 가이드 |
+
+## Claude 행동 원칙
+
+### 작업 전
 - 관련 파일 구조를 먼저 파악한다
-- `docs/DO_NOT.md`를 확인하고 금지된 패턴을 쓰지 않는다
+- `docs/DO_NOT.md` 를 확인하고 금지 패턴을 쓰지 않는다
 - 기존 컨벤션과 일관성을 유지한다
 
-### 2. 코드 품질 자가 검토 (작성 후 반드시 수행)
-- [ ] TypeScript 타입이 `any` 없이 명확한가?
+### 작업 후 자가 검토
+- [ ] TypeScript `any` 없이 타입이 명확한가?
 - [ ] 컴포넌트가 단일 책임 원칙을 지키는가?
-- [ ] 하드코딩된 값이 없는가? (상수/env로 분리)
+- [ ] 하드코딩된 값이 없는가? (상수/env 분리)
 - [ ] 에러 처리가 되어 있는가?
-- [ ] 불필요한 console.log가 없는가?
+- [ ] 불필요한 `console.log` 가 없는가?
 
-### 3. 솔직한 품질 평가
+### 품질 평가
 - 코드 작성 후 객관적으로 품질을 평가한다 (1~10점)
 - 개선 가능한 부분을 명시한다
 - "완벽하다"고 단정짓지 않는다
 
-### 4. Git 푸시 규칙 (필수)
+### Git 규칙
 - 작업 완료 후 변경 파일 목록과 커밋 메시지를 사용자에게 보고한다
-- 반드시 사용자 승인을 받은 후에만 push 한다
-- 절대 임의로 push 하지 않는다
-- 자세한 규칙: `docs/GIT_WORKFLOW.md`
-
-### 5. 변경 시 알림
-- 기존 파일을 수정할 경우 반드시 변경 내용을 설명한다
-- 영향 받는 다른 파일이 있으면 함께 안내한다
-
-@AGENTS.md
+- **반드시 사용자 승인 후에만 커밋한다**
+- push는 사용자가 직접 한다
