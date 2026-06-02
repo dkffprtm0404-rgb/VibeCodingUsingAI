@@ -7,9 +7,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { QuantitySelector } from './QuantitySelector'
 import { Button } from '@/components/ui/Button'
-import { formatPrice } from '@/lib/utils'
+import { cn, formatPrice } from '@/lib/utils'  // 단일 import로 통합
 import { useCartStore } from '@/store/cartStore'
-import { cn } from '@/lib/utils'
+import { LOW_STOCK_THRESHOLD, CRITICAL_STOCK_THRESHOLD } from '@/constants'
 import type { Product, SizeInfo } from '@/types/product'
 
 interface AddToCartSectionProps {
@@ -27,14 +27,13 @@ export function AddToCartSection({ product, isLoggedIn }: AddToCartSectionProps)
   const [sizeError, setSizeError] = useState(false)
 
   const isSoldOut = product.stock === 0
-  const maxQuantity = selectedSize ? selectedSize.stock : product.stock
   const totalPrice = product.price * quantity
 
   const handleSizeSelect = (size: SizeInfo) => {
     if (size.stock === 0) return
     setSelectedSize(size)
     setSizeError(false)
-    setQuantity(1) // 사이즈 변경 시 수량 초기화
+    setQuantity(1)
   }
 
   const handleAddToCart = () => {
@@ -42,12 +41,10 @@ export function AddToCartSection({ product, isLoggedIn }: AddToCartSectionProps)
       router.push(`/login?callbackUrl=/products/${product.id}`)
       return
     }
-    // 사이즈 선택 안 했을 때
     if (!selectedSize) {
       setSizeError(true)
       return
     }
-
     addItem(product, quantity, selectedSize.size)
     setIsAdded(true)
     setTimeout(() => setIsAdded(false), 2000)
@@ -63,20 +60,18 @@ export function AddToCartSection({ product, isLoggedIn }: AddToCartSectionProps)
 
   return (
     <div className="space-y-6">
-
       {/* 사이즈 선택 */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold text-gray-900">사이즈 선택</p>
-          {sizeError && (
-            <p className="text-xs text-red-500 font-medium">사이즈를 선택해주세요</p>
-          )}
+          {sizeError && <p className="text-xs text-red-500 font-medium">사이즈를 선택해주세요</p>}
         </div>
-
         <div className="flex flex-wrap gap-2">
           {product.sizes.map((sizeInfo) => {
             const isSelected = selectedSize?.size === sizeInfo.size
             const isOutOfStock = sizeInfo.stock === 0
+            const isCritical = !isOutOfStock && sizeInfo.stock <= CRITICAL_STOCK_THRESHOLD
+            const isLow = !isOutOfStock && sizeInfo.stock <= LOW_STOCK_THRESHOLD
 
             return (
               <button
@@ -93,16 +88,13 @@ export function AddToCartSection({ product, isLoggedIn }: AddToCartSectionProps)
                 )}
               >
                 {sizeInfo.size}
-                {/* 재고 부족 표시 */}
-                {!isOutOfStock && sizeInfo.stock <= 3 && (
+                {isCritical && (
                   <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-orange-400 rounded-full border-2 border-white" />
                 )}
               </button>
             )
           })}
         </div>
-
-        {/* 선택된 사이즈 치수 정보 */}
         {selectedSize && (
           <div className="px-4 py-3 bg-gray-50 rounded-xl border border-gray-100">
             <p className="text-xs font-semibold text-gray-700 mb-1">{selectedSize.size} 사이즈 실측</p>
@@ -117,12 +109,7 @@ export function AddToCartSection({ product, isLoggedIn }: AddToCartSectionProps)
         <div className="space-y-2">
           <p className="text-sm font-semibold text-gray-900">수량</p>
           <div className="flex items-center gap-4">
-            <QuantitySelector
-              value={quantity}
-              min={1}
-              max={selectedSize.stock}
-              onChange={setQuantity}
-            />
+            <QuantitySelector value={quantity} min={1} max={selectedSize.stock} onChange={setQuantity} />
             <span className="text-sm text-gray-400">최대 {selectedSize.stock}개</span>
           </div>
         </div>
@@ -134,18 +121,8 @@ export function AddToCartSection({ product, isLoggedIn }: AddToCartSectionProps)
         <span className="text-xl font-bold text-gray-900">{formatPrice(totalPrice)}</span>
       </div>
 
-      {/* 장바구니 담기 */}
-      <Button
-        size="lg"
-        className="w-full"
-        onClick={handleAddToCart}
-      >
-        {isAdded
-          ? '✓ 담겼어요!'
-          : isLoggedIn
-            ? '장바구니 담기'
-            : '로그인 후 구매하기'
-        }
+      <Button size="lg" className="w-full" onClick={handleAddToCart}>
+        {isAdded ? '✓ 담겼어요!' : isLoggedIn ? '장바구니 담기' : '로그인 후 구매하기'}
       </Button>
     </div>
   )

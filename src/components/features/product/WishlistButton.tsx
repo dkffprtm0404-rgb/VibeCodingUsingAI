@@ -1,13 +1,12 @@
 'use client'
 /**
  * WishlistButton.tsx — 찜하기 버튼
- *
- * 상품 상세 페이지에서 사용
- * 로그인 안 한 경우 로그인 페이지로 이동
+ * useWishlist 훅으로 로직 분리 → 컴포넌트는 UI만 담당
  */
 
-import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useWishlist } from '@/hooks/useWishlist'
+import { cn } from '@/lib/utils'
 
 interface WishlistButtonProps {
   productId: number
@@ -16,56 +15,34 @@ interface WishlistButtonProps {
 
 export function WishlistButton({ productId, isLoggedIn }: WishlistButtonProps) {
   const router = useRouter()
-  const [isWished, setIsWished] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const { isWished, isLoading, error, toggle } = useWishlist({ productId, isLoggedIn })
 
-  // 찜 여부 초기 조회
-  useEffect(() => {
-    if (!isLoggedIn) return
-    fetch('/api/wishlist')
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.productIds) {
-          setIsWished(data.productIds.includes(productId))
-        }
-      })
-  }, [productId, isLoggedIn])
-
-  const handleToggle = async () => {
+  const handleClick = async () => {
     if (!isLoggedIn) {
       router.push(`/login?callbackUrl=/products/${productId}`)
       return
     }
-
-    setIsLoading(true)
-    const method = isWished ? 'DELETE' : 'POST'
-
-    await fetch('/api/wishlist', {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productId }),
-    })
-
-    setIsWished(!isWished)
-    setIsLoading(false)
+    await toggle()
   }
 
   return (
-    <button
-      onClick={handleToggle}
-      disabled={isLoading}
-      className={`
-        flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium
-        transition-all duration-150 disabled:opacity-50
-        ${isWished
-          ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'
-          : 'bg-white border-gray-200 text-gray-600 hover:border-gray-400 hover:bg-gray-50'
-        }
-      `}
-      aria-label={isWished ? '찜 취소' : '찜하기'}
-    >
-      <span className="text-lg leading-none">{isWished ? '❤️' : '🤍'}</span>
-      <span>{isWished ? '찜 취소' : '찜하기'}</span>
-    </button>
+    <div className="space-y-1">
+      <button
+        onClick={handleClick}
+        disabled={isLoading}
+        aria-label={isWished ? '찜 취소' : '찜하기'}
+        className={cn(
+          'flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium',
+          'transition-all duration-150 disabled:opacity-50',
+          isWished
+            ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'
+            : 'bg-white border-gray-200 text-gray-600 hover:border-gray-400 hover:bg-gray-50'
+        )}
+      >
+        <span className="text-lg leading-none">{isWished ? '❤️' : '🤍'}</span>
+        <span>{isWished ? '찜 취소' : '찜하기'}</span>
+      </button>
+      {error && <p className="text-xs text-red-500">{error}</p>}
+    </div>
   )
 }
