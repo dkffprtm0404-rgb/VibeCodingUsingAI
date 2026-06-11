@@ -1,6 +1,6 @@
 'use client'
 /**
- * WishlistButton.tsx — 찜하기 버튼 (다크모드 지원)
+ * WishlistButton.tsx — 찜하기 버튼 (다크모드 밝은 텍스트)
  */
 
 import { useRouter } from 'next/navigation'
@@ -34,8 +34,8 @@ export function WishlistButton({ productId, isLoggedIn }: WishlistButtonProps) {
           'flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium w-full',
           'transition-all duration-150 disabled:opacity-50',
           isWished
-            ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/50'
-            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'
+            ? 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-950/60'
+            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
         )}
       >
         <span className="text-lg leading-none">{isWished ? '❤️' : '🤍'}</span>

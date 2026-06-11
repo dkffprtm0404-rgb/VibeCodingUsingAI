@@ -1,6 +1,6 @@
 'use client'
 /**
- * AddToCartSection.tsx — 사이즈 선택 + 장바구니 담기 (다크모드 지원)
+ * AddToCartSection.tsx — 사이즈 선택 + 장바구니 담기 (다크모드 밝은 텍스트)
  */
 
 import { useState } from 'react'
@@ -52,7 +52,7 @@ export function AddToCartSection({ product, isLoggedIn }: AddToCartSectionProps)
 
   if (isSoldOut) {
     return (
-      <div className="w-full py-4 text-center bg-gray-100 dark:bg-gray-800 rounded-2xl text-gray-500 dark:text-gray-400 font-medium">
+      <div className="w-full py-4 text-center bg-gray-100 dark:bg-gray-800 rounded-2xl text-gray-500 dark:text-gray-300 font-medium">
         현재 품절된 상품입니다
       </div>
     )
@@ -85,7 +85,7 @@ export function AddToCartSection({ product, isLoggedIn }: AddToCartSectionProps)
                     ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-gray-900 dark:border-white'
                     : isOutOfStock
                       ? 'bg-gray-50 dark:bg-gray-800 text-gray-300 dark:text-gray-600 border-gray-200 dark:border-gray-700 cursor-not-allowed line-through'
-                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-500 dark:hover:border-gray-400'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-100 border-gray-200 dark:border-gray-600 hover:border-gray-500 dark:hover:border-gray-300'
                 )}
               >
                 {sizeInfo.size}
@@ -98,14 +98,14 @@ export function AddToCartSection({ product, isLoggedIn }: AddToCartSectionProps)
         </div>
 
         {selectedSize && (
-          <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800/60 rounded-xl border border-gray-100 dark:border-gray-700">
-            <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+          <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
+            <p className="text-xs font-semibold text-gray-700 dark:text-white mb-1">
               {selectedSize.size} 사이즈 실측
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+            <p className="text-xs text-gray-500 dark:text-gray-200 leading-relaxed">
               {selectedSize.measurements}
             </p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">
               잔여 재고: {selectedSize.stock}개
             </p>
           </div>
@@ -118,14 +118,14 @@ export function AddToCartSection({ product, isLoggedIn }: AddToCartSectionProps)
           <p className="text-sm font-semibold text-gray-900 dark:text-white">수량</p>
           <div className="flex items-center gap-4">
             <QuantitySelector value={quantity} min={1} max={selectedSize.stock} onChange={setQuantity} />
-            <span className="text-sm text-gray-400 dark:text-gray-500">최대 {selectedSize.stock}개</span>
+            <span className="text-sm text-gray-400 dark:text-gray-400">최대 {selectedSize.stock}개</span>
           </div>
         </div>
       )}
 
       {/* 총 가격 */}
-      <div className="flex items-center justify-between py-4 border-t border-b border-gray-100 dark:border-gray-800">
-        <span className="text-sm text-gray-600 dark:text-gray-400">총 상품 금액</span>
+      <div className="flex items-center justify-between py-4 border-t border-b border-gray-100 dark:border-gray-700">
+        <span className="text-sm text-gray-600 dark:text-gray-300">총 상품 금액</span>
         <span className="text-xl font-bold text-gray-900 dark:text-white">{formatPrice(totalPrice)}</span>
       </div>
 

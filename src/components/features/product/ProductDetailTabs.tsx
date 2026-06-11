@@ -1,15 +1,11 @@
 'use client'
 /**
- * ProductDetailTabs.tsx — 상품 상세 탭 (다크모드 지원)
+ * ProductDetailTabs.tsx — 상품 상세 탭 (다크모드 밝은 텍스트)
  */
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { Product } from '@/types/product'
-
-interface ProductDetailTabsProps {
-  product: Product
-}
 
 type Tab = 'detail' | 'size' | 'delivery'
 
@@ -19,13 +15,13 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'delivery', label: '배송 안내' },
 ]
 
-export function ProductDetailTabs({ product }: ProductDetailTabsProps) {
+export function ProductDetailTabs({ product }: { product: Product }) {
   const [activeTab, setActiveTab] = useState<Tab>('detail')
 
   return (
     <div className="mt-16">
       {/* 탭 헤더 */}
-      <div className="flex border-b border-gray-200 dark:border-gray-800">
+      <div className="flex border-b border-gray-200 dark:border-gray-700">
         {TABS.map(({ key, label }) => (
           <button
             key={key}
@@ -34,7 +30,7 @@ export function ProductDetailTabs({ product }: ProductDetailTabsProps) {
               'px-6 py-4 text-sm font-medium transition-colors relative',
               activeTab === key
                 ? 'text-gray-900 dark:text-white'
-                : 'text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'
             )}
           >
             {label}
@@ -47,24 +43,24 @@ export function ProductDetailTabs({ product }: ProductDetailTabsProps) {
 
       <div className="py-10">
 
-        {/* 상품 설명 탭 */}
+        {/* 상품 설명 */}
         {activeTab === 'detail' && (
           <div className="max-w-2xl space-y-10">
             <div className="space-y-4">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">제품 소개</h3>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-base">
+              <p className="text-gray-600 dark:text-gray-100 leading-relaxed text-base">
                 {product.detailDescription}
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-gray-50 dark:bg-gray-800/60 rounded-2xl p-5 space-y-2">
-                <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">소재</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-200">{product.material}</p>
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-5 space-y-2">
+                <p className="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider">소재</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{product.material}</p>
               </div>
-              <div className="bg-gray-50 dark:bg-gray-800/60 rounded-2xl p-5 space-y-2">
-                <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">핏 안내</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-200">{product.fit}</p>
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-5 space-y-2">
+                <p className="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider">핏 안내</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{product.fit}</p>
               </div>
             </div>
 
@@ -77,8 +73,8 @@ export function ProductDetailTabs({ product }: ProductDetailTabsProps) {
                   '건조기 사용 금지',
                   '직사광선을 피해 음지에서 건조',
                 ].map((tip) => (
-                  <li key={tip} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <span className="text-gray-400 dark:text-gray-600 mt-0.5 flex-shrink-0">•</span>
+                  <li key={tip} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-100">
+                    <span className="text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0">•</span>
                     {tip}
                   </li>
                 ))}
@@ -87,12 +83,12 @@ export function ProductDetailTabs({ product }: ProductDetailTabsProps) {
           </div>
         )}
 
-        {/* 사이즈 가이드 탭 */}
+        {/* 사이즈 가이드 */}
         {activeTab === 'size' && (
           <div className="max-w-2xl space-y-6">
             <div className="space-y-2">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">사이즈 실측 정보</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 모든 측정값은 평평하게 놓은 상태에서 측정한 값입니다.
               </p>
             </div>
@@ -101,9 +97,9 @@ export function ProductDetailTabs({ product }: ProductDetailTabsProps) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left px-4 py-3 font-semibold text-gray-700 dark:text-gray-300 w-16">사이즈</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-700 dark:text-gray-300">실측 정보</th>
-                    <th className="text-center px-4 py-3 font-semibold text-gray-700 dark:text-gray-300 w-20">재고</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-700 dark:text-white w-16">사이즈</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-700 dark:text-white">실측 정보</th>
+                    <th className="text-center px-4 py-3 font-semibold text-gray-700 dark:text-white w-20">재고</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -114,29 +110,29 @@ export function ProductDetailTabs({ product }: ProductDetailTabsProps) {
                         'border-b border-gray-100 dark:border-gray-800 last:border-0 transition-colors',
                         sizeInfo.stock === 0
                           ? 'opacity-40'
-                          : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                          : 'hover:bg-gray-50 dark:hover:bg-gray-800/60'
                       )}
                     >
                       <td className="px-4 py-3.5">
                         <span className={cn(
                           'inline-flex items-center justify-center w-9 h-9 rounded-lg text-sm font-bold',
                           sizeInfo.stock === 0
-                            ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600'
+                            ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
                             : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
                         )}>
                           {sizeInfo.size}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 text-gray-600 dark:text-gray-400 leading-relaxed">
+                      <td className="px-4 py-3.5 text-gray-600 dark:text-gray-100 leading-relaxed">
                         {sizeInfo.measurements}
                       </td>
                       <td className="px-4 py-3.5 text-center">
                         {sizeInfo.stock === 0 ? (
                           <span className="text-xs text-red-400 font-medium">품절</span>
                         ) : sizeInfo.stock <= 3 ? (
-                          <span className="text-xs text-orange-500 font-medium">{sizeInfo.stock}개</span>
+                          <span className="text-xs text-orange-400 font-medium">{sizeInfo.stock}개</span>
                         ) : (
-                          <span className="text-xs text-green-600 dark:text-green-500 font-medium">충분</span>
+                          <span className="text-xs text-green-500 font-medium">충분</span>
                         )}
                       </td>
                     </tr>
@@ -145,14 +141,14 @@ export function ProductDetailTabs({ product }: ProductDetailTabsProps) {
               </table>
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50 rounded-2xl p-5 space-y-2">
-              <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">💡 핏 안내</p>
-              <p className="text-sm text-blue-700 dark:text-blue-400">{product.fit}</p>
+            <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-800 rounded-2xl p-5 space-y-2">
+              <p className="text-sm font-semibold text-blue-800 dark:text-blue-200">💡 핏 안내</p>
+              <p className="text-sm text-blue-700 dark:text-blue-100">{product.fit}</p>
             </div>
           </div>
         )}
 
-        {/* 배송 안내 탭 */}
+        {/* 배송 안내 */}
         {activeTab === 'delivery' && (
           <div className="max-w-2xl space-y-6">
             {[
@@ -188,8 +184,8 @@ export function ProductDetailTabs({ product }: ProductDetailTabsProps) {
                 </h3>
                 <ul className="space-y-2">
                   {items.map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <span className="text-gray-300 dark:text-gray-600 flex-shrink-0 mt-0.5">•</span>
+                    <li key={item} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-100">
+                      <span className="text-gray-300 dark:text-gray-500 flex-shrink-0 mt-0.5">•</span>
                       {item}
                     </li>
                   ))}

@@ -1,5 +1,5 @@
 /**
- * app/products/[id]/page.tsx — 상품 상세 페이지
+ * app/products/[id]/page.tsx — 상품 상세 페이지 (다크모드 밝은 텍스트)
  */
 
 import type { Metadata } from 'next'
@@ -41,12 +41,12 @@ export default async function ProductDetailPage({ params }: Props) {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
       {/* 브레드크럼 */}
-      <nav className="flex items-center gap-2 text-sm text-gray-400 mb-8">
-        <Link href="/" className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">홈</Link>
+      <nav className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500 mb-8">
+        <Link href="/" className="hover:text-gray-700 dark:hover:text-white transition-colors">홈</Link>
         <span>/</span>
-        <Link href="/products" className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">상품</Link>
+        <Link href="/products" className="hover:text-gray-700 dark:hover:text-white transition-colors">상품</Link>
         <span>/</span>
-        <span className="text-gray-700 dark:text-gray-300">{product.category}</span>
+        <span className="text-gray-700 dark:text-gray-200">{product.category}</span>
         <span>/</span>
         <span className="text-gray-900 dark:text-white font-medium truncate">{product.name}</span>
       </nav>
@@ -72,20 +72,20 @@ export default async function ProductDetailPage({ params }: Props) {
             )}
           </p>
 
+          {/* 소재 / 핏 카드 */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3.5">
-              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">소재</p>
-              <p className="text-xs text-gray-700 dark:text-gray-300 font-medium leading-relaxed">{product.material}</p>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3.5">
+              <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider mb-1">소재</p>
+              <p className="text-xs text-gray-700 dark:text-white font-medium leading-relaxed">{product.material}</p>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3.5">
-              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">핏</p>
-              <p className="text-xs text-gray-700 dark:text-gray-300 font-medium leading-relaxed">{product.fit.split('/')[0]}</p>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3.5">
+              <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider mb-1">핏</p>
+              <p className="text-xs text-gray-700 dark:text-white font-medium leading-relaxed">{product.fit.split('/')[0]}</p>
             </div>
           </div>
 
-          <hr className="border-gray-200 dark:border-gray-800" />
+          <hr className="border-gray-200 dark:border-gray-700" />
 
-          {/* 품절 여부에 따라 장바구니 or 재입고 알림 */}
           {isSoldOut ? (
             <RestockAlert productId={product.id} isLoggedIn={isLoggedIn} />
           ) : (
@@ -94,21 +94,22 @@ export default async function ProductDetailPage({ params }: Props) {
 
           <WishlistButton productId={product.id} isLoggedIn={isLoggedIn} />
 
-          <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-xs text-gray-500 dark:text-gray-300">
             <span>🚚</span>
             <span>5만원 이상 무료배송 · 평균 2~3일 배송</span>
           </div>
         </div>
       </div>
 
-      {/* 상세 탭 */}
       <ProductDetailTabs product={product} />
 
       {/* 연관 상품 */}
       <div className="mt-16">
         <div className="flex items-end justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">같은 카테고리 상품</h2>
-          <Link href="/products" className="text-sm text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">전체보기 →</Link>
+          <Link href="/products" className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+            전체보기 →
+          </Link>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {MOCK_PRODUCTS
@@ -130,7 +131,6 @@ export default async function ProductDetailPage({ params }: Props) {
         </div>
       </div>
 
-      {/* 최근 본 상품 */}
       <RecentlyViewed currentProductId={product.id} />
     </div>
   )
