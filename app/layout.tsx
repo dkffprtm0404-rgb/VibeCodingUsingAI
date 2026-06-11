@@ -1,11 +1,13 @@
 /**
- * layout.tsx — 루트 레이아웃
+ * app/layout.tsx — 루트 레이아웃
  */
 
 import type { Metadata } from 'next'
 import { Geist } from 'next/font/google'
 import { Header } from '@/components/features/layout/Header'
 import { ChatBot } from '@/components/features/chat/ChatBot'
+import { ToastContainer } from '@/components/ui/Toast'
+import { ScrollToTop } from '@/components/ui/ScrollToTop'
 import './globals.css'
 
 const geist = Geist({
@@ -27,8 +29,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen flex flex-col bg-[#fafafa] text-gray-900 antialiased">
         <Header />
         <main className="flex-1">{children}</main>
-        {/* AI 쇼핑 도우미 — 모든 페이지에서 접근 가능 */}
+        {/* 전역 UI 요소 */}
         <ChatBot />
+        <ToastContainer />
+        <ScrollToTop />
       </body>
     </html>
   )

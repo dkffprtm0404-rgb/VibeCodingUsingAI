@@ -7,9 +7,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { QuantitySelector } from './QuantitySelector'
 import { Button } from '@/components/ui/Button'
-import { cn, formatPrice } from '@/lib/utils'  // 단일 import로 통합
+import { cn, formatPrice } from '@/lib/utils'
 import { useCartStore } from '@/store/cartStore'
-import { LOW_STOCK_THRESHOLD, CRITICAL_STOCK_THRESHOLD } from '@/constants'
+import { toast } from '@/components/ui/Toast'
+import { CRITICAL_STOCK_THRESHOLD } from '@/constants'
 import type { Product, SizeInfo } from '@/types/product'
 
 interface AddToCartSectionProps {
@@ -23,7 +24,6 @@ export function AddToCartSection({ product, isLoggedIn }: AddToCartSectionProps)
 
   const [selectedSize, setSelectedSize] = useState<SizeInfo | null>(null)
   const [quantity, setQuantity] = useState(1)
-  const [isAdded, setIsAdded] = useState(false)
   const [sizeError, setSizeError] = useState(false)
 
   const isSoldOut = product.stock === 0
@@ -43,11 +43,11 @@ export function AddToCartSection({ product, isLoggedIn }: AddToCartSectionProps)
     }
     if (!selectedSize) {
       setSizeError(true)
+      toast.error('사이즈를 선택해주세요')
       return
     }
     addItem(product, quantity, selectedSize.size)
-    setIsAdded(true)
-    setTimeout(() => setIsAdded(false), 2000)
+    toast.success(`${product.name}을(를) 담았어요 🛒`)
   }
 
   if (isSoldOut) {
@@ -71,8 +71,6 @@ export function AddToCartSection({ product, isLoggedIn }: AddToCartSectionProps)
             const isSelected = selectedSize?.size === sizeInfo.size
             const isOutOfStock = sizeInfo.stock === 0
             const isCritical = !isOutOfStock && sizeInfo.stock <= CRITICAL_STOCK_THRESHOLD
-            const isLow = !isOutOfStock && sizeInfo.stock <= LOW_STOCK_THRESHOLD
-
             return (
               <button
                 key={sizeInfo.size}
@@ -122,7 +120,7 @@ export function AddToCartSection({ product, isLoggedIn }: AddToCartSectionProps)
       </div>
 
       <Button size="lg" className="w-full" onClick={handleAddToCart}>
-        {isAdded ? '✓ 담겼어요!' : isLoggedIn ? '장바구니 담기' : '로그인 후 구매하기'}
+        {isLoggedIn ? '장바구니 담기' : '로그인 후 구매하기'}
       </Button>
     </div>
   )
