@@ -1,7 +1,6 @@
 'use client'
 /**
- * WishlistButton.tsx — 찜하기 버튼
- * useWishlist 훅으로 로직 분리 → 컴포넌트는 UI만 담당
+ * WishlistButton.tsx — 찜하기 버튼 (다크모드 지원)
  */
 
 import { useRouter } from 'next/navigation'
@@ -32,11 +31,11 @@ export function WishlistButton({ productId, isLoggedIn }: WishlistButtonProps) {
         disabled={isLoading}
         aria-label={isWished ? '찜 취소' : '찜하기'}
         className={cn(
-          'flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium',
+          'flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium w-full',
           'transition-all duration-150 disabled:opacity-50',
           isWished
-            ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'
-            : 'bg-white border-gray-200 text-gray-600 hover:border-gray-400 hover:bg-gray-50'
+            ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/50'
+            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'
         )}
       >
         <span className="text-lg leading-none">{isWished ? '❤️' : '🤍'}</span>
