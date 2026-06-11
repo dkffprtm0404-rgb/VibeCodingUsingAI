@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tailwind v4 — 다크모드를 class 방식으로 활성화 */
+@variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #fafafa;
   --foreground: #111111;
@@ -9,7 +12,6 @@
   --muted-foreground: #888888;
 }
 
-/* 다크모드 변수 */
 .dark {
   --background: #0a0a0a;
   --foreground: #ededed;
@@ -37,7 +39,6 @@ html {
   scroll-behavior: smooth;
 }
 
-/* 커스텀 스크롤바 */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #f1f1f1; }
 .dark ::-webkit-scrollbar-track { background: #1a1a1a; }
