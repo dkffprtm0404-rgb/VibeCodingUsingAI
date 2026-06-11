@@ -4,17 +4,18 @@
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/Badge'
 import { AddToCartSection } from '@/components/features/product/AddToCartSection'
 import { WishlistButton } from '@/components/features/product/WishlistButton'
+import { RestockAlert } from '@/components/features/product/RestockAlert'
 import { ProductImageGallery } from '@/components/features/product/ProductImageGallery'
 import { ProductDetailTabs } from '@/components/features/product/ProductDetailTabs'
 import { RecentlyViewed } from '@/components/features/product/RecentlyViewed'
 import { MOCK_PRODUCTS } from '@/lib/mock-data'
 import { formatPrice, getStockStatus } from '@/lib/utils'
-import Image from 'next/image'
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -34,32 +35,35 @@ export default async function ProductDetailPage({ params }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
   const isLoggedIn = !!user
   const stockStatus = getStockStatus(product.stock)
+  const isSoldOut = product.stock === 0
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
       {/* 브레드크럼 */}
       <nav className="flex items-center gap-2 text-sm text-gray-400 mb-8">
-        <Link href="/" className="hover:text-gray-700 transition-colors">홈</Link>
+        <Link href="/" className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">홈</Link>
         <span>/</span>
-        <Link href="/products" className="hover:text-gray-700 transition-colors">상품</Link>
+        <Link href="/products" className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">상품</Link>
         <span>/</span>
-        <span className="text-gray-700">{product.category}</span>
+        <span className="text-gray-700 dark:text-gray-300">{product.category}</span>
         <span>/</span>
-        <span className="text-gray-900 font-medium truncate">{product.name}</span>
+        <span className="text-gray-900 dark:text-white font-medium truncate">{product.name}</span>
       </nav>
 
       {/* 메인 콘텐츠 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
-        <ProductImageGallery images={product.images} productName={product.name} isSoldOut={product.stock === 0} />
+        <ProductImageGallery images={product.images} productName={product.name} isSoldOut={isSoldOut} />
 
         <div className="flex flex-col space-y-5">
           <div className="space-y-2">
             <Badge variant="secondary">{product.category}</Badge>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-snug">{product.name}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white leading-snug">
+              {product.name}
+            </h1>
           </div>
 
-          <p className="text-3xl font-bold text-gray-900">{formatPrice(product.price)}</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white">{formatPrice(product.price)}</p>
 
           <p className={`text-sm font-medium ${stockStatus.color}`}>
             {stockStatus.label}
@@ -69,21 +73,28 @@ export default async function ProductDetailPage({ params }: Props) {
           </p>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-gray-50 rounded-xl p-3.5">
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3.5">
               <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">소재</p>
-              <p className="text-xs text-gray-700 font-medium leading-relaxed">{product.material}</p>
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-medium leading-relaxed">{product.material}</p>
             </div>
-            <div className="bg-gray-50 rounded-xl p-3.5">
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3.5">
               <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">핏</p>
-              <p className="text-xs text-gray-700 font-medium leading-relaxed">{product.fit.split('/')[0]}</p>
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-medium leading-relaxed">{product.fit.split('/')[0]}</p>
             </div>
           </div>
 
-          <hr className="border-gray-200" />
-          <AddToCartSection product={product} isLoggedIn={isLoggedIn} />
+          <hr className="border-gray-200 dark:border-gray-800" />
+
+          {/* 품절 여부에 따라 장바구니 or 재입고 알림 */}
+          {isSoldOut ? (
+            <RestockAlert productId={product.id} isLoggedIn={isLoggedIn} />
+          ) : (
+            <AddToCartSection product={product} isLoggedIn={isLoggedIn} />
+          )}
+
           <WishlistButton productId={product.id} isLoggedIn={isLoggedIn} />
 
-          <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl text-xs text-gray-500">
+          <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl text-xs text-gray-500 dark:text-gray-400">
             <span>🚚</span>
             <span>5만원 이상 무료배송 · 평균 2~3일 배송</span>
           </div>
@@ -96,8 +107,8 @@ export default async function ProductDetailPage({ params }: Props) {
       {/* 연관 상품 */}
       <div className="mt-16">
         <div className="flex items-end justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">같은 카테고리 상품</h2>
-          <Link href="/products" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">전체보기 →</Link>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">같은 카테고리 상품</h2>
+          <Link href="/products" className="text-sm text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">전체보기 →</Link>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {MOCK_PRODUCTS
@@ -105,21 +116,21 @@ export default async function ProductDetailPage({ params }: Props) {
             .slice(0, 4)
             .map((p) => (
               <Link key={p.id} href={`/products/${p.id}`}
-                className="group block bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-md transition-all">
-                <div className="relative aspect-square bg-gray-50 overflow-hidden">
+                className="group block bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all">
+                <div className="relative aspect-square bg-gray-50 dark:bg-gray-800 overflow-hidden">
                   <Image src={p.imageUrl} alt={p.name} fill sizes="25vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-300" />
                 </div>
                 <div className="p-3 space-y-1">
-                  <p className="text-sm font-medium text-gray-900 line-clamp-1">{p.name}</p>
-                  <p className="text-sm font-bold text-gray-900">{formatPrice(p.price)}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-1">{p.name}</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">{formatPrice(p.price)}</p>
                 </div>
               </Link>
             ))}
         </div>
       </div>
 
-      {/* 최근 본 상품 (Client Component) */}
+      {/* 최근 본 상품 */}
       <RecentlyViewed currentProductId={product.id} />
     </div>
   )
