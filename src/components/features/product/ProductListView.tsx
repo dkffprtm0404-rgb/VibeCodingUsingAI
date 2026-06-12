@@ -50,14 +50,14 @@ function ProductListContent({ products }: ProductListViewProps) {
       <SearchBar />
 
       {/* 필터 + 결과 수 */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-200">
-        <p className="text-sm text-gray-500 order-2 sm:order-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+        <p className="text-sm text-gray-500 dark:text-gray-400 order-2 sm:order-1">
           {searchQuery && (
             <span className="mr-2">
-              <span className="font-semibold text-gray-900">&quot;{searchQuery}&quot;</span> 검색 결과 ·
+              <span className="font-semibold text-gray-900 dark:text-white">&quot;{searchQuery}&quot;</span> 검색 결과 ·
             </span>
           )}
-          총 <span className="font-semibold text-gray-900">{filteredProducts.length}</span>개의 상품
+          총 <span className="font-semibold text-gray-900 dark:text-white">{filteredProducts.length}</span>개의 상품
         </p>
         <div className="order-1 sm:order-2">
           <CategoryFilter selectedCategory={selectedCategory} onCategoryChange={handleCategoryChange} />
@@ -68,8 +68,8 @@ function ProductListContent({ products }: ProductListViewProps) {
       {filteredProducts.length === 0 && searchQuery && (
         <div className="text-center py-16">
           <p className="text-4xl mb-3">🔍</p>
-          <p className="font-semibold text-gray-900 mb-1">&quot;{searchQuery}&quot; 검색 결과가 없어요</p>
-          <p className="text-sm text-gray-500">다른 검색어를 입력해보세요</p>
+          <p className="font-semibold text-gray-900 dark:text-white mb-1">&quot;{searchQuery}&quot; 검색 결과가 없어요</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">다른 검색어를 입력해보세요</p>
         </div>
       )}
 
@@ -80,7 +80,7 @@ function ProductListContent({ products }: ProductListViewProps) {
 
 export function ProductListView({ products }: ProductListViewProps) {
   return (
-    <Suspense fallback={<div className="h-96 animate-pulse bg-gray-50 rounded-2xl" />}>
+    <Suspense fallback={<div className="h-96 animate-pulse bg-gray-50 dark:bg-gray-800 rounded-2xl" />}>
       <ProductListContent products={products} />
     </Suspense>
   )

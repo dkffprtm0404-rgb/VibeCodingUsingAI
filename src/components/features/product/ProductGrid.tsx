@@ -19,8 +19,8 @@ export function ProductGrid({ products }: ProductGridProps) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <p className="text-4xl mb-4">🛍️</p>
-        <p className="text-gray-500 text-lg font-medium">상품이 없습니다</p>
-        <p className="text-gray-400 text-sm mt-1">다른 카테고리를 선택해보세요</p>
+        <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">상품이 없습니다</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">다른 카테고리를 선택해보세요</p>
       </div>
     )
   }

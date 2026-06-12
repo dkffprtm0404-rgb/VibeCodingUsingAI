@@ -59,9 +59,7 @@ export function ChatBot() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: apiMessages }),
       })
-
       const data = await res.json()
-
       setMessages((prev) => [
         ...prev,
         {
@@ -89,9 +87,12 @@ export function ChatBot() {
     <>
       {/* 챗봇 창 */}
       {isOpen && (
-        <div className="fixed bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-96 max-h-[620px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col z-50 overflow-hidden">
+        <div className="fixed bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-96 max-h-[620px]
+                        bg-white dark:bg-gray-900
+                        rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700
+                        flex flex-col z-50 overflow-hidden">
 
-          {/* 헤더 */}
+          {/* 헤더 — 항상 다크 */}
           <div className="flex items-center justify-between px-4 py-3.5 bg-gray-900 text-white flex-shrink-0">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-base">🤖</div>
@@ -120,8 +121,8 @@ export function ChatBot() {
                   <div className={`
                     px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-line
                     ${msg.role === 'user'
-                      ? 'bg-gray-900 text-white rounded-br-sm ml-auto'
-                      : 'bg-gray-100 text-gray-800 rounded-bl-sm'
+                      ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-br-sm ml-auto'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-bl-sm'
                     }
                   `}>
                     {msg.content}
@@ -135,26 +136,18 @@ export function ChatBot() {
                           key={product.id}
                           href={`/products/${product.id}`}
                           onClick={() => setIsOpen(false)}
-                          className="flex gap-3 p-2.5 bg-white border border-gray-200 rounded-xl hover:border-gray-400 hover:shadow-sm transition-all group"
+                          className="flex gap-3 p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-400 hover:shadow-sm transition-all group"
                         >
-                          {/* 상품 이미지 */}
-                          <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                            <Image
-                              src={product.imageUrl}
-                              alt={product.name}
-                              fill
-                              sizes="56px"
-                              className="object-cover group-hover:scale-105 transition-transform duration-200"
-                            />
+                          <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0">
+                            <Image src={product.imageUrl} alt={product.name} fill sizes="56px"
+                              className="object-cover group-hover:scale-105 transition-transform duration-200" />
                           </div>
-                          {/* 상품 정보 */}
                           <div className="flex-1 min-w-0 flex flex-col justify-center">
-                            <p className="text-xs font-semibold text-gray-900 line-clamp-1">{product.name}</p>
-                            <p className="text-xs text-gray-500 mt-0.5">{product.category}</p>
-                            <p className="text-sm font-bold text-gray-900 mt-1">{formatPrice(product.price)}</p>
+                            <p className="text-xs font-semibold text-gray-900 dark:text-white line-clamp-1">{product.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{product.category}</p>
+                            <p className="text-sm font-bold text-gray-900 dark:text-white mt-1">{formatPrice(product.price)}</p>
                           </div>
-                          {/* 화살표 */}
-                          <div className="flex items-center text-gray-300 group-hover:text-gray-600 transition-colors flex-shrink-0">
+                          <div className="flex items-center text-gray-300 dark:text-gray-600 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors flex-shrink-0">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                               <path d="M9 18l6-6-6-6" />
                             </svg>
@@ -167,10 +160,10 @@ export function ChatBot() {
               </div>
             ))}
 
-            {/* 로딩 */}
+            {/* 로딩 인디케이터 */}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 px-4 py-3 rounded-2xl rounded-bl-sm">
+                <div className="bg-gray-100 dark:bg-gray-800 px-4 py-3 rounded-2xl rounded-bl-sm">
                   <div className="flex gap-1 items-center">
                     <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -186,11 +179,8 @@ export function ChatBot() {
           {messages.length === 1 && (
             <div className="px-3 pb-2 flex flex-wrap gap-1.5 flex-shrink-0">
               {SUGGESTIONS.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => sendMessage(s)}
-                  className="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors"
-                >
+                <button key={s} onClick={() => sendMessage(s)}
+                  className="text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-full transition-colors">
                   {s}
                 </button>
               ))}
@@ -198,19 +188,25 @@ export function ChatBot() {
           )}
 
           {/* 입력창 */}
-          <form onSubmit={handleSubmit} className="flex gap-2 p-3 border-t border-gray-100 flex-shrink-0">
+          <form onSubmit={handleSubmit} className="flex gap-2 p-3 border-t border-gray-100 dark:border-gray-700 flex-shrink-0">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="메시지를 입력하세요..."
               disabled={isLoading}
-              className="flex-1 px-3.5 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-gray-400 focus:bg-white transition-all placeholder:text-gray-400 disabled:opacity-50"
+              className="flex-1 px-3.5 py-2.5 text-sm rounded-xl outline-none transition-all disabled:opacity-50
+                         bg-gray-50 dark:bg-gray-800
+                         border border-gray-200 dark:border-gray-600
+                         text-gray-900 dark:text-white
+                         placeholder:text-gray-400 dark:placeholder:text-gray-500
+                         focus:border-gray-400 dark:focus:border-gray-400
+                         focus:bg-white dark:focus:bg-gray-800"
             />
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
-              className="w-10 h-10 flex items-center justify-center bg-gray-900 text-white rounded-xl hover:bg-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+              className="w-10 h-10 flex items-center justify-center bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl hover:bg-gray-700 dark:hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7z" />
@@ -223,7 +219,7 @@ export function ChatBot() {
       {/* 플로팅 버튼 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-4 sm:right-6 w-14 h-14 rounded-full shadow-lg z-50 flex items-center justify-center text-2xl transition-all duration-200 hover:scale-110 active:scale-95 bg-gray-900"
+        className="fixed bottom-6 right-4 sm:right-6 w-14 h-14 rounded-full shadow-lg z-50 flex items-center justify-center text-2xl transition-all duration-200 hover:scale-110 active:scale-95 bg-gray-900 dark:bg-white text-white dark:text-gray-900"
         aria-label="쇼핑 도우미 열기"
       >
         {isOpen ? '✕' : '🤖'}

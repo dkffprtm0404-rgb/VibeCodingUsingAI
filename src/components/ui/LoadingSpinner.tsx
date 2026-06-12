@@ -22,10 +22,10 @@ export function LoadingSpinner({ size = 'md', label, className }: LoadingSpinner
   return (
     <div className={cn('flex flex-col items-center justify-center gap-3', className)}>
       <div className={cn(
-        'border-gray-200 border-t-gray-900 rounded-full animate-spin',
+        'border-gray-200 dark:border-gray-700 border-t-gray-900 dark:border-t-white rounded-full animate-spin',
         sizeStyles[size]
       )} />
-      {label && <p className="text-sm text-gray-400">{label}</p>}
+      {label && <p className="text-sm text-gray-400 dark:text-gray-500">{label}</p>}
     </div>
   )
 }

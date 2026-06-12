@@ -15,9 +15,9 @@ interface BadgeProps {
 
 // variant별 스타일 매핑 객체 — if/else 대신 객체로 관리하면 깔끔
 const variantStyles: Record<BadgeVariant, string> = {
-  default: 'bg-black text-white',
-  secondary: 'bg-gray-100 text-gray-700',
-  outline: 'border border-gray-300 text-gray-600 bg-transparent',
+  default: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900',
+  secondary: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200',
+  outline: 'border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 bg-transparent',
 }
 
 export function Badge({ children, variant = 'default' }: BadgeProps) {

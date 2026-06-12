@@ -14,12 +14,12 @@ export function SectionHeader({ label, title, description }: SectionHeaderProps)
   return (
     <div className="mb-8">
       {label && (
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">
+        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">
           {label}
         </p>
       )}
-      <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-      {description && <p className="text-gray-500 mt-1 text-sm">{description}</p>}
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
+      {description && <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">{description}</p>}
     </div>
   )
 }

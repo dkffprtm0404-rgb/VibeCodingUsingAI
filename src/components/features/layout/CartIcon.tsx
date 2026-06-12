@@ -25,7 +25,7 @@ export function CartIcon() {
   return (
     <Link
       href="/cart"
-      className="relative flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 transition-colors"
+      className="relative flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
       aria-label="장바구니"
     >
       <svg
@@ -34,7 +34,7 @@ export function CartIcon() {
         viewBox="0 0 24 24"
         fill="none" stroke="currentColor"
         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-        className="text-gray-700"
+        className="text-gray-700 dark:text-gray-200"
       >
         <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
         <line x1="3" y1="6" x2="21" y2="6" />
@@ -45,8 +45,8 @@ export function CartIcon() {
       {isMounted && totalCount > 0 && (
         <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1
                          flex items-center justify-center
-                         bg-black text-white text-[10px] font-bold
-                         rounded-full leading-none">
+                         bg-gray-900 dark:bg-white text-white dark:text-gray-900
+                         text-[10px] font-bold rounded-full leading-none">
           {totalCount > 99 ? '99+' : totalCount}
         </span>
       )}

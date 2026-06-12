@@ -21,13 +21,13 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   // 기본: 검정 배경 흰 글자
-  primary: 'bg-gray-900 text-white hover:bg-gray-700 border border-transparent',
+  primary: 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-100 border border-transparent',
   // 밝은 회색
-  secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 border border-transparent',
+  secondary: 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 border border-transparent',
   // 테두리
-  outline: 'bg-transparent text-gray-800 border border-gray-300 hover:bg-gray-50',
+  outline: 'bg-transparent text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800',
   // 배경 없음
-  ghost: 'bg-transparent text-gray-700 border border-transparent hover:bg-gray-100',
+  ghost: 'bg-transparent text-gray-700 dark:text-gray-300 border border-transparent hover:bg-gray-100 dark:hover:bg-gray-800',
   // 어두운 배경 위에 사용하는 흰 버튼
   white: 'bg-white text-gray-900 border border-white hover:bg-gray-100',
 }
