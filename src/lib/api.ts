@@ -49,13 +49,13 @@ export const wishlistApi = {
 }
 
 export const restockApi = {
-  getAll: () => fetchApi<{ productIds: number[] }>('/api/restock'),
+  getAll: () => fetchApi<{ productIds: number[] }>(API_ROUTES.RESTOCK),
   add: (productId: number) =>
-    fetchApi<{ success: boolean }>('/api/restock', {
+    fetchApi<{ success: boolean }>(API_ROUTES.RESTOCK, {
       method: 'POST', body: JSON.stringify({ productId }),
     }),
   remove: (productId: number) =>
-    fetchApi<{ success: boolean }>('/api/restock', {
+    fetchApi<{ success: boolean }>(API_ROUTES.RESTOCK, {
       method: 'DELETE', body: JSON.stringify({ productId }),
     }),
 }
@@ -71,6 +71,13 @@ export const styleQuizApi = {
   analyze: (answers: Record<string, string>) =>
     fetchApi<{ result: unknown; recommendedProducts: unknown[] }>(API_ROUTES.STYLE_QUIZ, {
       method: 'POST', body: JSON.stringify(answers),
+    }),
+}
+
+export const couponApi = {
+  validate: (code: string, totalPrice: number) =>
+    fetchApi<{ code: string; label: string; discountAmount: number }>(API_ROUTES.COUPON, {
+      method: 'POST', body: JSON.stringify({ code, totalPrice }),
     }),
 }
 

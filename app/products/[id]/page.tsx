@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/Badge'
 import { AddToCartSection } from '@/components/features/product/AddToCartSection'
 import { WishlistButton } from '@/components/features/product/WishlistButton'
+import { ShareButton } from '@/components/features/product/ShareButton'
 import { RestockAlert } from '@/components/features/product/RestockAlert'
 import { ProductImageGallery } from '@/components/features/product/ProductImageGallery'
 import { ProductDetailTabs } from '@/components/features/product/ProductDetailTabs'
@@ -92,7 +93,19 @@ export default async function ProductDetailPage({ params }: Props) {
             <AddToCartSection product={product} isLoggedIn={isLoggedIn} />
           )}
 
-          <WishlistButton productId={product.id} isLoggedIn={isLoggedIn} />
+          {/* 찜하기 + 공유 — 나란히 배치 */}
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <WishlistButton productId={product.id} isLoggedIn={isLoggedIn} />
+            </div>
+            <div className="flex-1">
+              <ShareButton
+                title={product.name}
+                text={product.description}
+                url={`/products/${product.id}`}
+              />
+            </div>
+          </div>
 
           <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-xs text-gray-500 dark:text-gray-300">
             <span>🚚</span>

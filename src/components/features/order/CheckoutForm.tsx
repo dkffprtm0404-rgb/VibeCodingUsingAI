@@ -2,6 +2,7 @@
 /**
  * CheckoutForm.tsx — 주문/결제 폼
  * useShipping 훅 + ordersApi 적용
+ * 쿠폰 적용 시 상품금액에서 할인 차감 후 배송비 합산
  */
 
 import { useState } from 'react'
@@ -10,8 +11,10 @@ import Image from 'next/image'
 import { useCartStore } from '@/store/cartStore'
 import { useShipping } from '@/hooks/useShipping'
 import { Button } from '@/components/ui/Button'
+import { CouponInput } from './CouponInput'
 import { formatPrice } from '@/lib/utils'
 import { ordersApi, ApiError } from '@/lib/api'
+import type { AppliedCoupon } from '@/types/coupon'
 
 interface ShippingInfo {
   name: string
@@ -29,7 +32,13 @@ export function CheckoutForm({ userName }: CheckoutFormProps) {
   const router = useRouter()
   const { items, getTotalPrice, clearCart } = useCartStore()
   const totalPrice = getTotalPrice()
-  const { shippingFee, finalPrice, isFreeShipping } = useShipping(totalPrice)
+  // 배송비는 쿠폰 할인 전 상품 금액 기준 (서버와 동일한 정책)
+  const { shippingFee, isFreeShipping } = useShipping(totalPrice)
+
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null)
+  const discountAmount = appliedCoupon?.discountAmount ?? 0
+  // 쿠폰 할인 적용 후 최종 결제 금액
+  const finalPrice = Math.max(totalPrice - discountAmount, 0) + shippingFee
 
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
     name: userName,
@@ -63,6 +72,7 @@ export function CheckoutForm({ userName }: CheckoutFormProps) {
         shippingInfo,
         totalPrice,
         shippingFee,
+        couponCode: appliedCoupon?.code ?? null,
       })
       clearCart()
       router.push(`/orders/${orderId}`)
@@ -148,6 +158,11 @@ export function CheckoutForm({ userName }: CheckoutFormProps) {
               ))}
             </div>
           </div>
+
+          {/* 쿠폰 — 데스크탑에서는 좌측 컬럼, 모바일에서도 결제 요약 위에 위치 */}
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+            <CouponInput totalPrice={totalPrice} onApply={setAppliedCoupon} />
+          </div>
         </div>
 
         {/* 결제 요약 */}
@@ -158,6 +173,12 @@ export function CheckoutForm({ userName }: CheckoutFormProps) {
               <div className="flex justify-between text-gray-600 dark:text-gray-300">
                 <span>상품 금액</span><span>{formatPrice(totalPrice)}</span>
               </div>
+              {appliedCoupon && (
+                <div className="flex justify-between text-green-600 dark:text-green-400">
+                  <span>쿠폰 할인</span>
+                  <span>-{formatPrice(discountAmount)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-gray-600 dark:text-gray-300">
                 <span>배송비</span>
                 <span className={isFreeShipping ? 'text-green-600 dark:text-green-400 font-medium' : ''}>

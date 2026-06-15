@@ -29,6 +29,8 @@ export const API_ROUTES = {
   },
   ORDERS: '/api/orders',
   WISHLIST: '/api/wishlist',
+  RESTOCK: '/api/restock',
+  COUPON: '/api/coupon',
   CHAT: '/api/chat',
   STYLE_QUIZ: '/api/style-quiz',
 } as const
