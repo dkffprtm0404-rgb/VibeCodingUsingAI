@@ -11,6 +11,7 @@ import { useShipping } from '@/hooks/useShipping'
 import { QuantitySelector } from '@/components/features/product/QuantitySelector'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { AvailableCoupons } from '@/components/features/order/AvailableCoupons'
 import { formatPrice } from '@/lib/utils'
 
 export function CartView() {
@@ -84,6 +85,12 @@ export function CartView() {
             </div>
           </div>
         ))}
+
+        {/* 쿠폰 안내 — 실제 적용은 주문/결제 페이지에서 */}
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
+          <AvailableCoupons totalPrice={totalPrice} />
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-3">쿠폰은 주문/결제 페이지에서 적용할 수 있어요.</p>
+        </div>
       </div>
 
       {/* 결제 요약 */}

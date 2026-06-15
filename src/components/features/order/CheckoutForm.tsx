@@ -12,6 +12,7 @@ import { useCartStore } from '@/store/cartStore'
 import { useShipping } from '@/hooks/useShipping'
 import { Button } from '@/components/ui/Button'
 import { CouponInput } from './CouponInput'
+import { AvailableCoupons } from './AvailableCoupons'
 import { formatPrice } from '@/lib/utils'
 import { ordersApi, ApiError } from '@/lib/api'
 import type { AppliedCoupon } from '@/types/coupon'
@@ -159,8 +160,10 @@ export function CheckoutForm({ userName }: CheckoutFormProps) {
             </div>
           </div>
 
-          {/* 쿠폰 — 데스크탑에서는 좌측 컬럼, 모바일에서도 결제 요약 위에 위치 */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+          {/* 쿠폰 — 사용 가능한 쿠폰 안내 + 입력 */}
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 space-y-5">
+            <AvailableCoupons totalPrice={totalPrice} />
+            <hr className="border-gray-100 dark:border-gray-800" />
             <CouponInput totalPrice={totalPrice} onApply={setAppliedCoupon} />
           </div>
         </div>
