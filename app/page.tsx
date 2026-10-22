@@ -3,8 +3,8 @@
  */
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { Button } from '@/components/ui/Button'
+import { HeroShaderBackground } from '@/components/features/layout/HeroShaderBackground'
 import { MOCK_PRODUCTS } from '@/lib/mock-data'
 import { ProductCard } from '@/components/features/product/ProductCard'
 
@@ -16,37 +16,33 @@ export default function HomePage() {
 
       {/* 히어로 섹션 */}
       <section className="relative bg-gray-950 text-white overflow-hidden min-h-[600px] flex items-center">
-        <div className="absolute inset-0">
-          <Image
-            src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=1400&q=60"
-            alt="hero background"
-            fill
-            className="object-cover opacity-40"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-950/60 to-transparent" />
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32">
+        <HeroShaderBackground />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-linear-to-r from-slate-950/90 via-slate-950/70 to-slate-950/50 sm:via-slate-950/60 sm:to-slate-950/10" />
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32">
           <div className="max-w-lg space-y-6">
-            <span className="inline-block text-xs font-semibold tracking-widest uppercase text-gray-400 border border-gray-700 px-3 py-1.5 rounded-full">
+            <span className="inline-block text-xs font-semibold tracking-widest uppercase text-violet-100 border border-white/25 bg-white/5 px-3 py-1.5 rounded-full">
               2026 Summer Collection
             </span>
             <h1 className="text-5xl sm:text-6xl font-bold leading-[1.1] tracking-tight">
               트렌디한 패션을
               <br />
-              <span className="text-gray-400">한 곳에서</span>
+              <span className="text-violet-200">한 곳에서</span>
             </h1>
-            <p className="text-gray-400 text-lg leading-relaxed">
+            <p className="text-slate-200 text-lg leading-relaxed">
               클래식부터 모던까지, 매일 새로운 스타일을 발견하세요.
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
-              <Link href="/products">
-                <Button variant="white" size="lg">쇼핑 시작하기 →</Button>
+              <Link
+                href="/products"
+                className="inline-flex items-center justify-center rounded-xl border border-white bg-white px-7 py-3.5 text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-200"
+              >
+                쇼핑 시작하기 →
               </Link>
-              <Link href="/style-quiz">
-                <Button variant="outline" size="lg" className="border-gray-600 text-white hover:bg-white/10">
-                  ✨ 스타일 진단
-                </Button>
+              <Link
+                href="/style-quiz"
+                className="inline-flex items-center justify-center rounded-xl border border-white/30 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-200"
+              >
+                ✨ 스타일 진단
               </Link>
             </div>
           </div>

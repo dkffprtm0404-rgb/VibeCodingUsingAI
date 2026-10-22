@@ -39,6 +39,15 @@ html {
   scroll-behavior: smooth;
 }
 
+/* 셰이더 로딩 중, GPU 미지원, 모션 감소 설정에서도 유지되는 배너 배경 */
+.shop-hero-background {
+  background:
+    radial-gradient(ellipse at 80% 25%, #5b4bba 0%, transparent 55%),
+    radial-gradient(ellipse at 70% 85%, #1f8492 0%, transparent 55%),
+    radial-gradient(ellipse at 30% 10%, #443461 0%, transparent 50%),
+    #080e20;
+}
+
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #f1f1f1; }
 .dark ::-webkit-scrollbar-track { background: #1a1a1a; }
