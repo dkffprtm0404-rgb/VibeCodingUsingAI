@@ -60,6 +60,7 @@ export function ChatBot() {
         body: JSON.stringify({ messages: apiMessages }),
       })
       const data = await res.json()
+      if (!res.ok) throw new Error('AI 응답 실패')
       setMessages((prev) => [
         ...prev,
         {

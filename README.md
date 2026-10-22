@@ -50,6 +50,8 @@ Next.js 기반 쇼핑 흐름에 상품 데이터 기반 챗봇과 스타일 진�
 
 ### 최신 반영 내용
 
+- **AI 응답 전환 (2026-10-22)**: 쇼핑 도우미·스타일 진단은 기존 Claude API를 먼저 사용하고, 키 누락·오류·시간 초과·사용 불가 응답이면 로그인된 ChatGPT 계정의 Codex App Server `gpt-6-sol`로 전환합니다. [실행 조건과 검증 기록](docs/CODEX_FALLBACK.md)을 참고하세요.
+- **쇼핑 흐름 안정화 (2026-10-22)**: 주문의 상품·수량·사이즈·배송지를 저장 전에 검증하고, 저장된 장바구니를 현재 상품과 재고 기준으로 복원합니다. 최근 본 상품의 첫 방문 누락, 모바일 메뉴 가로 스크롤과 포커스, 기존 린트 오류도 수정했습니다. 상세 내용은 [작업 기록](docs/WORK_PLAN.md)에 정리했습니다.
 - **장바구니 재고 제한 (2026-10-21)**: 최초 담기·추가 담기·수량 변경과 화면의 증가 버튼에 선택한 사이즈 재고를 동일하게 적용합니다. 잘못된 수량과 품절·존재하지 않는 사이즈의 신규 추가를 차단하며, Node 내장 테스트로 회귀를 확인합니다.
 - **쿠폰 안내**: 장바구니와 주문 화면에서 할인 조건·예상 할인액·쿠폰 코드를 확인합니다.
 - **쿠폰 적용**: 화면의 할인 미리보기와 별도로, 주문 API에서 쿠폰과 금액을 다시 계산합니다.
@@ -74,6 +76,7 @@ flowchart TB
     LOCAL[("localStorage<br/>장바구니 · 최근 본 상품 · 테마")]
     SUPABASE[("Supabase<br/>Auth · PostgreSQL")]
     CLAUDE["Anthropic Messages API"]
+    CODEX["Codex App Server<br/>ChatGPT 로그인 · gpt-6-sol"]
 
     USER --> SERVER
     SERVER --> CLIENT
@@ -86,6 +89,7 @@ flowchart TB
     DATA --> API
     DATA --> AI
     AI <--> CLAUDE
+    AI -->|"API 응답 불가 시"| CODEX
 ```
 
 ### 기술 스택
@@ -97,7 +101,7 @@ flowchart TB
 | 스타일 | Tailwind CSS 4, next-themes | 반응형 화면과 테마 전환 |
 | 상태 관리 | Zustand 5, persist | 장바구니 상태와 브라우저 저장 |
 | 인증·DB | Supabase Auth, PostgreSQL, `@supabase/ssr` | 쿠키 기반 세션과 사용자 데이터 |
-| AI | Anthropic Claude API | 서버에서 상품 문맥을 포함한 추천 요청 |
+| AI | Anthropic Claude API, Codex App Server | Claude 우선, 응답 불가 시 ChatGPT 로그인 기반 `gpt-6-sol` |
 | 실행·배포 구성 | Docker, Next.js standalone | 멀티스테이지 이미지와 Compose 실행 |
 | 정적 검사 | ESLint 9, TypeScript | 코드 규칙과 타입 검사 |
 
@@ -112,15 +116,17 @@ flowchart TB
 
 ### 2. 브라우저 저장 상태와 초기 렌더링 구분
 
-장바구니는 Zustand `persist`로 `localStorage`에 저장합니다. 상품 ID와 선택한 사이즈를 함께 사용해 같은 상품의 다른 사이즈를 구분합니다. 수량 추가·변경 시 선택 사이즈의 재고를 상한으로 적용하고, 사이즈가 없는 기존 항목은 전체 재고를 사용합니다. 이미 저장된 초과 수량의 자동 보정과 서버 주문 API의 재고 검증은 아직 포함하지 않습니다.
+장바구니는 Zustand `persist`로 `localStorage`에 저장합니다. 상품 ID와 선택한 사이즈를 함께 사용해 같은 상품의 다른 사이즈를 구분합니다. 수량 추가·변경 시 사이즈별 재고와 다른 행이 점유한 전체 재고를 함께 확인합니다. 사이즈가 없는 기존 항목은 전체 재고를 사용합니다.
 
-헤더의 장바구니 수량 배지는 마운트 후 표시해 서버의 초기 값과 브라우저에 저장된 값이 다른 상황을 처리합니다. 최근 본 상품도 브라우저 저장소에서 복원하고 최대 6개로 유지합니다.
+복원 시 상품명·가격·재고는 현재 카탈로그로 갱신하고 초과 수량은 현재 재고로 줄입니다. 중복 행은 합치고 품절·알 수 없는 상품·사이즈·손상된 항목은 제외합니다. 잘못된 JSON이나 저장소 접근 실패에서도 스토어 액션은 유지합니다. 서버 주문 API도 같은 카탈로그 기준으로 수량과 재고를 검증하며, 실제 재고 차감·동시 주문 제어는 포함하지 않습니다.
+
+헤더의 장바구니 수량 배지와 테마 버튼은 `useSyncExternalStore` 기반 초기 상태로 서버·클라이언트 렌더 차이를 처리합니다. 최근 본 상품도 외부 저장소 구독으로 복원하고 첫 방문부터 기록하며, 중복을 제거해 최대 6개를 유지합니다.
 
 관련 코드: [장바구니 스토어](src/store/cartStore.ts) · [수량 배지](src/components/features/layout/CartIcon.tsx) · [최근 본 상품](src/hooks/useRecentlyViewed.ts)
 
 ### 3. 주문 금액을 서버에서 다시 계산
 
-주문 API는 클라이언트가 보낸 상품 가격·할인액을 그대로 저장하지 않습니다. 상품 ID로 서버의 상품 데이터를 찾고 수량을 적용한 뒤, 배송비와 쿠폰을 계산합니다.
+주문 API는 요청 JSON 구조, 양의 안전한 정수 수량, 상품·사이즈별 누적 재고, 필수 배송지 문자열을 먼저 검증합니다. 하나라도 잘못되면 DB 저장 전에 400으로 거부하고, 미인증 요청은 401로 거부합니다. 상품 가격·할인액은 클라이언트 값을 신뢰하지 않고 서버 상품 데이터로 다시 계산합니다.
 
 ```text
 상품 합계 = 서버 상품 단가 × 요청 수량의 합
@@ -135,16 +141,17 @@ flowchart TB
 
 ### 4. AI 응답을 상품 데이터와 연결
 
-AI 요청에는 상품 ID·이름·가격·카테고리 등의 정보를 함께 전달합니다. 모델의 응답에서 추천 ID를 읽은 뒤, 코드의 상품 목록에 존재하고 재고가 있는 상품만 카드 데이터로 반환합니다.
+AI 요청에는 상품 ID·이름·가격·카테고리 등의 정보를 함께 전달합니다. 모델의 응답에서 추천 ID를 읽은 뒤, 코드의 상품 목록에 존재하고 재고가 있는 상품만 중복 없이 최대 3개 카드 데이터로 반환합니다.
 
-- 챗봇: 대화 메시지와 추천 상품을 함께 응답하며, JSON 파싱 실패 시 텍스트만 반환합니다.
+- 챗봇: 대화 메시지와 추천 상품을 함께 응답합니다. Claude의 정상 일반 텍스트 답변도 유지하며, 잘못된 JSON 응답은 Codex 전환 대상으로 처리합니다.
 - 스타일 진단: 4개 설문 답변으로 스타일 유형·설명·키워드·코디·팁과 추천 상품을 생성합니다.
-- API 키: 서버 Route Handler에서 `ANTHROPIC_API_KEY`를 사용합니다.
-- 코드에 지정된 모델: `claude-haiku-4-5-20251001`
+- 1차 응답: 서버의 `ANTHROPIC_API_KEY`로 `claude-haiku-4-5-20251001`을 호출합니다.
+- 대체 응답: API 키 누락·HTTP/통신 오류·15초 시간 초과·사용 불가 응답이면 Codex App Server의 `gpt-6-sol`을 호출합니다. 서버를 실행하는 OS 사용자의 ChatGPT 로그인이 필요하며, OpenAI API 키나 다른 모델로 대체하지 않습니다.
+- 요청 입력과 결과 구조를 서버에서 검증하고, 두 경로 모두 실패하면 503과 사용자용 오류를 반환합니다. 응답 헤더 `X-AI-Provider`, `X-AI-Model`로 실제 응답 경로를 확인할 수 있습니다.
 
 별도 벡터 DB나 검색 인덱스를 사용하는 구조는 아니며, 현재 상품 목록을 요청 문맥에 포함하는 방식입니다.
 
-관련 코드: [챗봇 API](app/api/chat/route.ts) · [스타일 진단 API](app/api/style-quiz/route.ts)
+관련 코드: [챗봇 API](app/api/chat/route.ts) · [스타일 진단 API](app/api/style-quiz/route.ts) · [공통 응답 전환](src/lib/ai/provider.ts) · [Codex 실행 안내](docs/CODEX_FALLBACK.md)
 
 ### 5. 인증과 데이터 접근 경계
 
@@ -183,9 +190,9 @@ AI 요청에는 상품 ID·이름·가격·카테고리 등의 정보를 함께 
 - 실제 PG 결제 승인·취소·환불 연동
 - 상품·재고·쿠폰의 DB 관리와 재고 차감
 - 재입고 신청을 기반으로 한 이메일·메시지 발송
-- 주문과 주문 상품 저장의 트랜잭션 처리, 요청 검증 강화
+- 주문과 주문 상품 저장의 트랜잭션 처리, 중복 제출 방지
 - DB 스키마·RLS 정책을 재현할 수 있는 마이그레이션
-- 장바구니 이외 기능의 단위 테스트, 통합·E2E 테스트와 CI 자동화
+- 실제 DB를 포함한 통합·E2E 테스트와 CI 자동화
 
 위 항목은 현재 완료 기능과 구분한 확장 범위입니다.
 
@@ -193,9 +200,9 @@ AI 요청에는 상품 ID·이름·가격·카테고리 등의 정보를 함께 
 
 ### 다음 개선 우선순위
 
-1. **주문 요청 검증**: `app/api/orders/route.ts`의 수량·상품·배송지 검증과 실패 시 저장 방지를 테스트합니다. 주문·주문 상품의 원자적 저장은 DB 변경 범위를 먼저 정한 후 진행합니다.
-2. **기존 린트 오류와 최근 본 상품**: 2026-10-21 수정 전 검사에서 오류 6개·경고 2개를 확인했습니다. `portfolio/page.tsx`의 내부 링크, `CartIcon`·`SearchBar`·`ThemeToggle`·`useRecentlyViewed`의 effect를 점검합니다. 최근 본 상품은 최초 마운트 때 기록을 건너뛰는 경로를 브라우저에서 재현한 뒤 수정합니다.
-3. **저장된 장바구니 복원 검증**: 기존 저장소에 남은 초과 수량·손상 데이터를 복원할 때의 보정 정책을 정하고 회귀 테스트를 추가합니다.
+1. **주문 저장의 원자성·중복 제출 방지**: 주문 상품 저장 실패 시 주문만 남는 경우와 중복 주문을 방지합니다. DB 트랜잭션/RPC·요청 식별자 등 변경 범위를 먼저 정해야 합니다.
+2. **테스트용 DB·RLS 재현 환경**: 마이그레이션과 테스트용 데이터로 로그인·주문 저장·권한을 검증할 수 있게 합니다.
+3. **통합·E2E 테스트와 CI**: 현재 회귀 테스트에 실제 로그인·주문 흐름을 추가하고 자동 실행합니다.
 
 <a id="getting-started"></a>
 ## 로컬 실행
@@ -204,7 +211,8 @@ AI 요청에는 상품 ID·이름·가격·카테고리 등의 정보를 함께 
 
 - **Node.js 20.9 이상**, npm — 잠금 파일의 Next.js 엔진 요구사항 기준
 - **Supabase 프로젝트** — Auth와 아래 데이터 테이블 준비
-- **Anthropic API 키** — 챗봇·스타일 진단을 사용할 때 필요
+- **Anthropic API 키** — 챗봇·스타일 진단의 1차 응답에 사용
+- **Codex CLI와 ChatGPT 로그인** — AI 대체 응답을 사용할 서버의 OS 사용자에 필요
 - **Docker / Compose** — 컨테이너로 실행할 경우 필요
 
 ### 1. 저장소와 의존성 준비
@@ -237,7 +245,7 @@ NEXT_PUBLIC_APP_NAME=MyShop
 | `NEXT_PUBLIC_SUPABASE_URL` | 서버·브라우저의 Supabase 연결 주소 |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 사용자 세션 기반 Supabase 접근 |
 | `SUPABASE_SERVICE_ROLE_KEY` | 서버의 회원가입·주문 생성 전용 |
-| `ANTHROPIC_API_KEY` | 서버의 챗봇·스타일 진단 호출 전용 |
+| `ANTHROPIC_API_KEY` | Claude 1차 응답 전용; 누락 시 Codex 호출 |
 | `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_APP_NAME` | 앱 공통 상수의 선택 설정 |
 
 서버 전용 키에는 `NEXT_PUBLIC_` 접두사를 붙이지 않습니다. `.env.local`은 Git 제외 대상입니다.
@@ -261,7 +269,7 @@ NEXT_PUBLIC_APP_NAME=MyShop
 npm run dev
 ```
 
-[http://localhost:3000](http://localhost:3000)에 접속합니다. AI 키가 없으면 챗봇·스타일 진단 요청은 설정 오류를 반환합니다.
+[http://localhost:3000](http://localhost:3000)에 접속합니다. Claude API 응답이 불가능하면 서버의 Codex CLI와 ChatGPT 로그인을 사용합니다. 두 경로 모두 사용할 수 없으면 503을 반환합니다. Windows 데스크톱 앱의 CLI도 자동 탐색하며, 선택 실행 경로와 제한은 [Codex 실행 안내](docs/CODEX_FALLBACK.md)에 정리했습니다.
 
 프로덕션 빌드와 실행:
 
@@ -288,6 +296,8 @@ docker compose --env-file .env.local logs -f myshop
 - `--env-file .env.local`: Compose가 빌드 인자에 사용할 값도 같은 파일에서 읽도록 지정
 
 공개 환경변수를 변경하면 이미 만들어진 브라우저 번들에 반영되도록 다시 빌드해야 합니다.
+
+현재 Docker 구성에는 Codex CLI·로그인이 포함되어 있지 않습니다. 호스트 PC의 로그인은 컨테이너나 원격 서버에 자동 공유되지 않으며, 해당 환경의 Codex 준비는 별도 작업입니다.
 
 중지:
 
@@ -334,9 +344,9 @@ npx tsc --noEmit --incremental false
 npm run build
 ```
 
-`npm test`는 Node 내장 테스트 러너와 기존 TypeScript 의존성을 사용해 실제 장바구니 스토어를 검증합니다. 테스트는 메모리 저장소를 사용하며 Supabase·AI API·사용자 브라우저 저장소에 접근하지 않습니다. 통합·E2E 테스트와 CI 설정은 아직 포함되어 있지 않습니다. 빌드는 Supabase 환경 설정과 Google 폰트 다운로드 등 외부 접근의 영향을 받을 수 있습니다.
+`npm test`는 Node 내장 테스트 러너와 기존 TypeScript 의존성으로 장바구니 스토어·복원, 최근 본 상품 저장·구독, 실제 주문·AI POST 핸들러와 Codex 프로세스 경계를 검증합니다. 테스트는 메모리 저장소를 사용하고 외부 인증·DB·AI 전송 경계만 대체합니다. 실제 Supabase·AI API·사용자 브라우저 저장소에 접근하지 않으며, 실 DB 통합·E2E 테스트와 CI는 아직 포함되어 있지 않습니다. 빌드는 Supabase 환경 설정과 Google 폰트 다운로드 등 외부 접근의 영향을 받을 수 있습니다.
 
-2026-10-22 확인: 장바구니 회귀 테스트 **34/34 통과**, 변경 파일 ESLint·TypeScript 검사·프로덕션 빌드 통과. 실제 `CartView`와 스토어를 사용하는 격리된 브라우저 화면에서 수정 전 XL 수량이 재고를 넘어 6개가 되는 것을 재현하고, 수정 후 5개에서 증가 버튼 비활성화 및 키보드 수량 변경을 확인했습니다. 로그인·주문 저장까지 포함한 E2E 검증은 아닙니다. 전체 린트에는 위 우선순위에 기재한 기존 오류가 남아 있습니다.
+2026-10-22 확인: 회귀 테스트 **116/116 통과**(기존 쇼핑 흐름 83, AI 응답 전환 23, Codex 프로세스 경계 10), 전체 ESLint 오류·경고 0개, TypeScript 검사·프로덕션 빌드 통과. 브라우저에서 최근 본 상품의 첫 기록·새로고침 유지, 검색 제출·초기화, 테마 전환과 모바일 메뉴의 폭·닫기·포커스를 확인했습니다. 실제 쇼핑 API에서 `codex` / `gpt-6-sol` 응답과 추천 상품을 확인했으며, ChatGPT 로그인 기반 스타일 진단 응답도 서버 검증을 통과했습니다. 로그인·실제 DB 주문 저장을 포함한 E2E 검증은 아닙니다.
 
 ### 기능 확인 체크리스트
 
@@ -373,6 +383,7 @@ src/
 ├── hooks/                   # 인증·쿠폰·찜·재입고·최근 본 상품
 ├── lib/
 │   ├── supabase/            # 서버·브라우저 클라이언트
+│   ├── ai/                  # Claude 우선 응답·Codex App Server·결과 검증
 │   ├── api.ts               # 클라이언트 API 호출 공통 처리
 │   ├── mock-data.ts         # 상품 데이터
 │   └── coupons.ts           # 쿠폰 데이터·계산
@@ -381,7 +392,7 @@ src/
 └── types/                   # 상품·주문·스타일·쿠폰 타입
 
 proxy.ts                     # 세션 갱신·보호 페이지 접근 제어
-tests/                       # Node 내장 장바구니 회귀 테스트
+tests/                       # 쇼핑 흐름·AI 응답 전환 회귀 테스트
 Dockerfile                   # standalone 멀티스테이지 빌드
 docker-compose.yml           # 컨테이너 실행 설정
 docs/                        # 아키텍처·컨벤션·개발 절차
@@ -395,6 +406,7 @@ docs/                        # 아키텍처·컨벤션·개발 절차
 | 구조·렌더링 전략 | [아키텍처](docs/ARCHITECTURE.md) |
 | 코딩 규칙 | [컨벤션](docs/CONVENTIONS.md) · [금지 패턴과 개선 기록](docs/DO_NOT.md) |
 | Docker 구성 | [Docker 안내](docs/DOCKER.md) |
+| AI 실행·응답 전환 | [Codex App Server 안내와 검증 기록](docs/CODEX_FALLBACK.md) |
 | 협업·Git | [Git 작업 흐름](docs/GIT_WORKFLOW.md) |
 | AI 협업 | [공통 작업 규칙](AGENTS.md) · [계획](AGENT_PLANNER.md) · [실행](AGENT_EXECUTOR.md) · [검토](AGENT_REVIEWER.md) |
 | 검토 기준 | [품질 평가 기준](docs/QUALITY_SCORE.md) |
