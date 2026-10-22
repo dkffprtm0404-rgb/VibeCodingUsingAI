@@ -10,6 +10,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { Product } from '@/types/product'
 import { formatPrice } from '@/lib/utils'
+import { ApiError, chatApi } from '@/lib/api'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -33,6 +34,7 @@ export function ChatBot() {
   ])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [loginRequired, setLoginRequired] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -52,15 +54,10 @@ export function ChatBot() {
     setMessages((prev) => [...prev, userMessage])
     setInput('')
     setIsLoading(true)
+    setLoginRequired(false)
 
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: apiMessages }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error('AI 응답 실패')
+      const data = await chatApi.send(apiMessages)
       setMessages((prev) => [
         ...prev,
         {
@@ -69,10 +66,11 @@ export function ChatBot() {
           recommendedProducts: data.recommendedProducts ?? [],
         },
       ])
-    } catch {
+    } catch (error) {
+      setLoginRequired(error instanceof ApiError && error.status === 401)
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: '일시적인 오류가 발생했어요. 다시 시도해주세요 😅' },
+        { role: 'assistant', content: error instanceof ApiError ? error.message : '일시적인 오류가 발생했어요. 다시 시도해주세요 😅' },
       ])
     } finally {
       setIsLoading(false)
@@ -189,6 +187,11 @@ export function ChatBot() {
           )}
 
           {/* 입력창 */}
+          {loginRequired && (
+            <Link href="/login" className="px-4 py-2 text-sm font-semibold underline text-gray-900 dark:text-white">
+              로그인하고 쇼핑 도우미 이용하기
+            </Link>
+          )}
           <form onSubmit={handleSubmit} className="flex gap-2 p-3 border-t border-gray-100 dark:border-gray-700 flex-shrink-0">
             <input
               type="text"

@@ -8,6 +8,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { formatPrice } from '@/lib/utils'
+import { ApiError, styleQuizApi } from '@/lib/api'
 import type { Product } from '@/types/product'
 import type { StyleResult, StyleQuizAnswer } from '@/types/style'
 
@@ -67,6 +68,7 @@ export function StyleQuiz() {
   const [result, setResult] = useState<StyleResult | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [error, setError] = useState('')
+  const [loginRequired, setLoginRequired] = useState(false)
 
   const progress = (currentQ / QUESTIONS.length) * 100
 
@@ -80,18 +82,13 @@ export function StyleQuiz() {
     } else {
       setStep('loading')
       try {
-        const res = await fetch('/api/style-quiz', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newAnswers),
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error)
+        const data = await styleQuizApi.analyze(newAnswers)
         setResult(data.result)
         setProducts(data.recommendedProducts)
         setStep('result')
-      } catch {
-        setError('분석 중 오류가 발생했어요. 다시 시도해주세요.')
+      } catch (error) {
+        setLoginRequired(error instanceof ApiError && error.status === 401)
+        setError(error instanceof ApiError ? error.message : '분석 중 오류가 발생했어요. 다시 시도해주세요.')
         setStep('quiz')
         setCurrentQ(0)
         setAnswers({})
@@ -101,7 +98,7 @@ export function StyleQuiz() {
 
   const handleReset = () => {
     setStep('quiz'); setCurrentQ(0); setAnswers({})
-    setResult(null); setProducts([]); setError('')
+    setResult(null); setProducts([]); setError(''); setLoginRequired(false)
   }
 
   if (step === 'quiz') {
@@ -130,6 +127,11 @@ export function StyleQuiz() {
           <div className="px-4 py-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl text-sm text-red-600 dark:text-red-400 text-center">
             {error}
           </div>
+        )}
+        {loginRequired && (
+          <Link href="/login?callbackUrl=/style-quiz" className="block text-center underline text-gray-900 dark:text-white">
+            로그인하고 스타일 진단하기
+          </Link>
         )}
 
         {/* 선택지 */}

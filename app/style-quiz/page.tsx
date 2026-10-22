@@ -4,13 +4,17 @@
 
 import type { Metadata } from 'next'
 import { StyleQuiz } from '@/components/features/style/StyleQuiz'
+import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'AI 스타일 진단',
   description: '4가지 질문으로 나만의 스타일 유형을 찾아보세요.',
 }
 
-export default function StyleQuizPage() {
+export default async function StyleQuizPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
   return (
     <div className="min-h-[calc(100vh-64px)] bg-gray-50 dark:bg-gray-950">
       <div className="bg-gray-950 text-white py-14 text-center space-y-3">
@@ -24,7 +28,14 @@ export default function StyleQuizPage() {
         </p>
       </div>
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12">
-        <StyleQuiz />
+        {user ? <StyleQuiz /> : (
+          <div className="space-y-4 text-center text-gray-700 dark:text-gray-200">
+            <p>스타일 진단은 로그인한 회원만 이용할 수 있어요.</p>
+            <Link href="/login?callbackUrl=/style-quiz" className="inline-block rounded-xl bg-gray-900 px-6 py-3 text-white dark:bg-white dark:text-gray-900">
+              로그인하고 스타일 진단하기
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -13,13 +13,13 @@ export const metadata: Metadata = { title: '로그인' }
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ signup?: string }>
+  searchParams: Promise<{ signup?: string; confirmation?: string }>
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (user) redirect('/')
 
-  const { signup } = await searchParams
+  const { signup, confirmation } = await searchParams
 
   return (
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 bg-gray-50 dark:bg-gray-950">
@@ -33,9 +33,15 @@ export default async function LoginPage({
           {signup === 'success' && (
             <div className="px-4 py-3 bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-xl">
               <p className="text-sm text-green-700 dark:text-green-300 text-center">
-                🎉 회원가입 완료! 이메일을 확인한 후 로그인해주세요.
+                확인 메일을 요청했어요. 가입할 때 사용한 브라우저에서 메일의 인증 링크를 열어주세요.
               </p>
             </div>
+          )}
+
+          {confirmation === 'error' && (
+            <p role="alert" className="px-4 py-3 bg-red-50 dark:bg-red-950/40 rounded-xl text-sm text-red-700 dark:text-red-300">
+              인증 링크가 만료되었거나 확인할 수 없어요. 이메일 확인을 마쳤다면 아래에서 로그인해주세요.
+            </p>
           )}
 
           <Suspense fallback={<div className="h-64 animate-pulse bg-gray-50 dark:bg-gray-800 rounded-xl" />}>

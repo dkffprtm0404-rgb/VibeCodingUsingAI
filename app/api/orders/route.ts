@@ -17,8 +17,11 @@ import { NextResponse } from 'next/server'
 import { validateCoupon } from '@/lib/coupons'
 import { validateOrderRequest } from '@/lib/order-validation'
 import { SHIPPING_FEE, SHIPPING_THRESHOLD } from '@/constants'
+import { validateJsonMutation } from '@/lib/request-security'
 
 export async function POST(request: Request) {
+  const blocked = validateJsonMutation(request)
+  if (blocked) return blocked
   try {
     const supabase = await createClient()
 
@@ -118,6 +121,7 @@ export async function GET() {
     const { data: orders, error } = await supabase
       .from('orders')
       .select('*, order_items(*)')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
     if (error) throw error

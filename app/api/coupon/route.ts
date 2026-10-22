@@ -10,8 +10,11 @@
 
 import { NextResponse } from 'next/server'
 import { validateCoupon } from '@/lib/coupons'
+import { validateJsonMutation } from '@/lib/request-security'
 
 export async function POST(request: Request) {
+  const blocked = validateJsonMutation(request)
+  if (blocked) return blocked
   try {
     const { code, totalPrice } = await request.json()
 

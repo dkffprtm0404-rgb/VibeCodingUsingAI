@@ -28,6 +28,19 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
+/** 로그인 후 이동은 사이트 내부 경로만 허용한다. 외부·특수 스킴·우회 문자는 거부한다. */
+export function getSafeCallbackUrl(value: string): string {
+  if (!value.startsWith('/') || /[\\\u0000-\u0020\u007f]/.test(value)) return '/'
+  try {
+    const pathname = decodeURIComponent(value.split(/[?#]/, 1)[0])
+    if (pathname.startsWith('//') || /[\\\u0000-\u0020\u007f]/.test(pathname)
+      || pathname.split('/').some((segment) => segment === '.' || segment === '..')) return '/'
+    return value
+  } catch {
+    return '/'
+  }
+}
+
 /** 선택한 사이즈의 재고. 사이즈가 생략된 기존 항목만 전체 재고를 사용합니다. */
 export function getAvailableStock(product: Product, selectedSize?: string): number {
   if (selectedSize === undefined) return product.stock

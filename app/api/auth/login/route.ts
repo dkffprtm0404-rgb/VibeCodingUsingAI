@@ -7,24 +7,22 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { validateJsonMutation } from '@/lib/request-security'
+import { readCredentials } from '@/lib/auth-validation'
 
 export async function POST(request: Request) {
+  const blocked = validateJsonMutation(request)
+  if (blocked) return blocked
+  let body: unknown
+  try { body = await request.json() } catch {
+    return NextResponse.json({ error: '로그인 요청 형식을 확인해주세요.' }, { status: 400 })
+  }
+  const credentials = readCredentials(body)
+  if (!credentials) return NextResponse.json({ error: '이메일과 비밀번호를 확인해주세요.' }, { status: 400 })
   try {
-    const { email, password } = await request.json()
-
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: '이메일과 비밀번호를 입력해주세요.' },
-        { status: 400 }
-      )
-    }
-
     const supabase = await createClient()
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const { data, error } = await supabase.auth.signInWithPassword(credentials)
 
     if (error) {
       return NextResponse.json(

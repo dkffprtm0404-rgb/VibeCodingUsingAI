@@ -11,6 +11,8 @@ import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { authApi, ApiError } from '@/lib/api'
 import { MIN_PASSWORD_LENGTH } from '@/constants'
+import { getSafeCallbackUrl } from '@/lib/utils'
+import { toast } from '@/components/ui/Toast'
 
 // 로그인 훅
 export function useLogin(callbackUrl: string = '/') {
@@ -24,7 +26,7 @@ export function useLogin(callbackUrl: string = '/') {
 
     try {
       await authApi.login(email, password)
-      router.push(callbackUrl)
+      router.push(getSafeCallbackUrl(callbackUrl))
       router.refresh()
     } catch (err) {
       setError(err instanceof ApiError ? err.message : '로그인 중 오류가 발생했어요.')
@@ -66,13 +68,8 @@ export function useSignUp() {
 
     setIsLoading(true)
     try {
-      const data = await authApi.signup(name, email, password)
-      if (data.autoLogin) {
-        router.push('/')
-        router.refresh()
-      } else {
-        router.push('/login?signup=success')
-      }
+      await authApi.signup(name, email, password)
+      router.push('/login?signup=success')
     } catch (err) {
       setError(err instanceof ApiError ? err.message : '회원가입 중 오류가 발생했어요.')
     } finally {
@@ -93,9 +90,7 @@ export function useLogout() {
       router.push('/')
       router.refresh()
     } catch {
-      // 로그아웃 실패해도 홈으로 이동
-      router.push('/')
-      router.refresh()
+      toast.error('로그아웃하지 못했어요. 다시 시도해주세요.')
     }
   }, [router])
 

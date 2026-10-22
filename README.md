@@ -39,7 +39,7 @@ Next.js 기반 쇼핑 흐름에 상품 데이터 기반 챗봇과 스타일 진�
 | 상품 탐색 | 검색어와 카테고리를 URL에 반영하고 두 조건으로 함께 필터링 |
 | 상품 상세 | 이미지 갤러리, 사이즈·실측 정보, 수량 선택, 재고 표시, 관련 상품 |
 | 장바구니 | 상품·사이즈별 항목 관리, 수량 변경·삭제, 브라우저 저장소 유지, 무료배송 안내 |
-| 인증 | Supabase 이메일·비밀번호 로그인, 회원가입 후 로그인, 보호 페이지 접근 제어 |
+| 인증 | Supabase 이메일 인증 가입·PKCE 확인, 이메일·비밀번호 로그인, 보호 페이지 접근 제어 |
 | 주문 | 배송지 입력, 서버의 상품 금액·배송비·쿠폰 할인 재계산, 주문 목록·상세 조회 |
 | 쿠폰 | 정액·정률 할인, 최소 주문 금액·최대 할인 한도, 사용 가능한 쿠폰 안내·코드 복사 |
 | 찜·재입고 신청 | 로그인 사용자의 찜 추가·삭제, 재입고 알림 신청·조회·취소 |
@@ -50,6 +50,8 @@ Next.js 기반 쇼핑 흐름에 상품 데이터 기반 챗봇과 스타일 진�
 
 ### 최신 반영 내용
 
+- **선택 보안 조치 (2026-10-22)**: AI는 이메일 확인을 마친 로그인 회원만 이용하며, 두 기능 합산 회원당 분당 5회·한국시간 하루 30회, 서버 프로세스 전체 하루 100회로 제한합니다. 관리자 가입 대신 확인 메일·PKCE 콜백을 사용하고 모든 쓰기 API에 같은 출처·JSON 검사를 적용했습니다. [실행 조건·검증 기록](docs/SECURITY_HARDENING.md)을 참고하세요.
+- **보안 사전 점검 (2026-10-22)**: 주문 조회에 소유자 조건을 추가하고 로그인 후 외부 주소 이동을 차단했습니다. 비밀키 교체·패키지 보안 패치·AI 호출 제한 등 남은 조치와 확인 범위는 [보안 점검 기록](docs/SECURITY_REVIEW.md)에 정리했습니다. 전체 보안 조치 완료를 뜻하지 않습니다.
 - **AI 응답 전환 (2026-10-22)**: 쇼핑 도우미·스타일 진단은 기존 Claude API를 먼저 사용하고, 키 누락·오류·시간 초과·사용 불가 응답이면 로그인된 ChatGPT 계정의 Codex App Server `gpt-6-sol`로 전환합니다. [실행 조건과 검증 기록](docs/CODEX_FALLBACK.md)을 참고하세요.
 - **쇼핑 흐름 안정화 (2026-10-22)**: 주문의 상품·수량·사이즈·배송지를 저장 전에 검증하고, 저장된 장바구니를 현재 상품과 재고 기준으로 복원합니다. 최근 본 상품의 첫 방문 누락, 모바일 메뉴 가로 스크롤과 포커스, 기존 린트 오류도 수정했습니다. 상세 내용은 [작업 기록](docs/WORK_PLAN.md)에 정리했습니다.
 - **장바구니 재고 제한 (2026-10-21)**: 최초 담기·추가 담기·수량 변경과 화면의 증가 버튼에 선택한 사이즈 재고를 동일하게 적용합니다. 잘못된 수량과 품절·존재하지 않는 사이즈의 신규 추가를 차단하며, Node 내장 테스트로 회귀를 확인합니다.
@@ -141,6 +143,8 @@ flowchart TB
 
 ### 4. AI 응답을 상품 데이터와 연결
 
+AI는 이메일 확인을 마친 로그인 회원만 사용할 수 있습니다. 두 API가 회원당 분당 5회·한국시간 하루 30회, 서버 프로세스 전체 하루 100회 한도를 공유하며 모델 호출 전에 차단합니다. 초과 시 429와 `Retry-After`를 반환합니다. 한도는 프로세스 메모리에 저장돼 재시작하면 초기화되고 다중 서버에서는 합산되지 않습니다.
+
 AI 요청에는 상품 ID·이름·가격·카테고리 등의 정보를 함께 전달합니다. 모델의 응답에서 추천 ID를 읽은 뒤, 코드의 상품 목록에 존재하고 재고가 있는 상품만 중복 없이 최대 3개 카드 데이터로 반환합니다.
 
 - 챗봇: 대화 메시지와 추천 상품을 함께 응답합니다. Claude의 정상 일반 텍스트 답변도 유지하며, 잘못된 JSON 응답은 Codex 전환 대상으로 처리합니다.
@@ -157,7 +161,9 @@ AI 요청에는 상품 ID·이름·가격·카테고리 등의 정보를 함께 
 
 `proxy.ts`에서 세션을 갱신하고 `/cart`, `/checkout`, `/orders`, `/mypage`의 미로그인 접근을 로그인 화면으로 보냅니다. 주문·찜·재입고 API도 별도로 사용자를 확인합니다.
 
-회원가입은 서버의 Admin API로 이메일 확인 상태의 계정을 생성합니다. 주문 생성도 서버의 service role 클라이언트를 사용하므로, 일반 사용자 세션의 DB 접근과 구분됩니다. 사용자별 주문 조회 권한은 Supabase의 RLS 정책을 올바르게 설정해야 보장됩니다.
+회원가입은 일반 `auth.signUp`과 이메일 확인을 사용합니다. 이메일 자동 확인이 켜져 있거나 공개 Auth 설정을 확인할 수 없으면 가입을 시작하지 않습니다. 확인 메일의 PKCE 코드는 `/auth/callback`에서 가입 브라우저의 검증자로 교환합니다. 주문 생성만 서버의 service role 클라이언트를 사용하며, 주문 조회는 소유자 조건과 DB RLS를 함께 적용해야 합니다.
+
+모든 POST/DELETE API는 같은 출처의 `Origin`과 `application/json`을 요구합니다. 명시된 `NEXT_PUBLIC_APP_URL`이 있으면 그 origin을 사용하고, 없으면 서버 요청 URL의 origin을 사용합니다. 외부·누락된 출처는 403, 다른 콘텐츠 형식은 415로 거부합니다. 모바일·데스크톱 로그아웃은 성공했을 때만 이동하며 실패를 안내합니다.
 
 관련 코드: [페이지 접근 제어](proxy.ts) · [회원가입 API](app/api/auth/signup/route.ts)
 
@@ -244,11 +250,13 @@ NEXT_PUBLIC_APP_NAME=MyShop
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | 서버·브라우저의 Supabase 연결 주소 |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 사용자 세션 기반 Supabase 접근 |
-| `SUPABASE_SERVICE_ROLE_KEY` | 서버의 회원가입·주문 생성 전용 |
+| `SUPABASE_SERVICE_ROLE_KEY` | 서버의 주문 생성 전용 |
 | `ANTHROPIC_API_KEY` | Claude 1차 응답 전용; 누락 시 Codex 호출 |
 | `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_APP_NAME` | 앱 공통 상수의 선택 설정 |
 
 서버 전용 키에는 `NEXT_PUBLIC_` 접두사를 붙이지 않습니다. `.env.local`은 Git 제외 대상입니다.
+
+회원가입에는 Supabase의 **Confirm email** 활성화와 확인 메일 전송 설정이 필요합니다. 로컬은 `http://localhost:3000/auth/callback`, 배포는 실제 사이트의 `/auth/callback`을 Auth의 허용 Redirect URLs에 등록합니다. 기본 확인 메일 링크(`ConfirmationURL`)의 PKCE 흐름을 사용하며, 가입할 때 사용한 브라우저에서 링크를 엽니다. `NEXT_PUBLIC_APP_URL`을 설정했다면 브라우저의 실제 origin과 일치해야 합니다.
 
 ### 3. Supabase 데이터 준비
 
@@ -323,6 +331,7 @@ docker compose --env-file .env.local down
 | --- | --- |
 | `POST /api/auth/signup` | 회원가입·자동 로그인 시도 |
 | `POST /api/auth/login`, `POST /api/auth/logout` | 로그인·로그아웃 |
+| `GET /auth/callback` | 이메일 확인 후 PKCE 코드 교환·안전한 이동 |
 | `GET /api/orders`, `POST /api/orders` | 주문 목록·생성 |
 | `GET /api/wishlist`, `POST /api/wishlist`, `DELETE /api/wishlist` | 찜 조회·추가·삭제 |
 | `GET /api/restock`, `POST /api/restock`, `DELETE /api/restock` | 재입고 신청 조회·추가·취소 |
@@ -346,7 +355,7 @@ npm run build
 
 `npm test`는 Node 내장 테스트 러너와 기존 TypeScript 의존성으로 장바구니 스토어·복원, 최근 본 상품 저장·구독, 실제 주문·AI POST 핸들러와 Codex 프로세스 경계를 검증합니다. 테스트는 메모리 저장소를 사용하고 외부 인증·DB·AI 전송 경계만 대체합니다. 실제 Supabase·AI API·사용자 브라우저 저장소에 접근하지 않으며, 실 DB 통합·E2E 테스트와 CI는 아직 포함되어 있지 않습니다. 빌드는 Supabase 환경 설정과 Google 폰트 다운로드 등 외부 접근의 영향을 받을 수 있습니다.
 
-2026-10-22 확인: 회귀 테스트 **116/116 통과**(기존 쇼핑 흐름 83, AI 응답 전환 23, Codex 프로세스 경계 10), 전체 ESLint 오류·경고 0개, TypeScript 검사·프로덕션 빌드 통과. 브라우저에서 최근 본 상품의 첫 기록·새로고침 유지, 검색 제출·초기화, 테마 전환과 모바일 메뉴의 폭·닫기·포커스를 확인했습니다. 실제 쇼핑 API에서 `codex` / `gpt-6-sol` 응답과 추천 상품을 확인했으며, ChatGPT 로그인 기반 스타일 진단 응답도 서버 검증을 통과했습니다. 로그인·실제 DB 주문 저장을 포함한 E2E 검증은 아닙니다.
+2026-10-22 확인: 회귀 테스트 **199/199 통과**(기존 135 + 출처 검사 29 + 가입·인증 16 + AI 접근·한도 15 + 로그아웃 클라이언트 4), 전체 ESLint 오류·경고 0개, TypeScript 검사·프로덕션 빌드 통과. 최신 브라우저 확인은 비회원 AI 차단·로그인 이동, 확인 메일 안내, 인증 코드 누락 시 안전한 오류 안내입니다. 앞선 AI 연동 작업에서는 실제 `codex` / `gpt-6-sol` 응답도 확인했습니다. 실제 확인 메일 발송·수신, 회원 로그인부터 주문 저장까지의 E2E는 이번에 수행하지 않았습니다. 상세 검증 범위는 [보안 강화 기록](docs/SECURITY_HARDENING.md)에 정리했습니다.
 
 ### 기능 확인 체크리스트
 
@@ -407,6 +416,8 @@ docs/                        # 아키텍처·컨벤션·개발 절차
 | 코딩 규칙 | [컨벤션](docs/CONVENTIONS.md) · [금지 패턴과 개선 기록](docs/DO_NOT.md) |
 | Docker 구성 | [Docker 안내](docs/DOCKER.md) |
 | AI 실행·응답 전환 | [Codex App Server 안내와 검증 기록](docs/CODEX_FALLBACK.md) |
+| 보안 점검·남은 조치 | [보안 점검 기록과 키 교체 실행안](docs/SECURITY_REVIEW.md) |
+| 적용한 인증·AI 보안 | [보안 강화 실행·검증 기록](docs/SECURITY_HARDENING.md) |
 | 협업·Git | [Git 작업 흐름](docs/GIT_WORKFLOW.md) |
 | AI 협업 | [공통 작업 규칙](AGENTS.md) · [계획](AGENT_PLANNER.md) · [실행](AGENT_EXECUTOR.md) · [검토](AGENT_REVIEWER.md) |
 | 검토 기준 | [품질 평가 기준](docs/QUALITY_SCORE.md) |

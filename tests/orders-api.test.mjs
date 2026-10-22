@@ -29,7 +29,7 @@ function setup({ user = { id: 'test-user' } } = {}) {
 
 async function submit(api, payload) {
   return api.post(new Request('http://localhost/api/orders', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+    method: 'POST', headers: { Origin: 'http://localhost', 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
   }))
 }
 
@@ -87,7 +87,7 @@ test('rejects a null JSON body before writing', async () => {
 
 test('rejects malformed JSON as 400 before writing', async () => {
   const api = setup()
-  const response = await api.post(new Request('http://localhost/api/orders', { method: 'POST', body: '{' }))
+  const response = await api.post(new Request('http://localhost/api/orders', { method: 'POST', headers: { Origin: 'http://localhost', 'Content-Type': 'application/json' }, body: '{' }))
   assert.equal(response.status, 400)
   assert.deepEqual(api.writes, [])
 })

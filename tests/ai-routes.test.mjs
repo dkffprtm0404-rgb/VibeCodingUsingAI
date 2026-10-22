@@ -14,6 +14,8 @@ const cases = [
 ]
 
 beforeEach((context) => {
+  delete globalThis.__myshopAiQuota
+  context.after(() => { delete globalThis.__myshopAiQuota })
   const previousKey = process.env.ANTHROPIC_API_KEY
   process.env.ANTHROPIC_API_KEY = 'test-claude-key'
   context.after(() => {
@@ -30,6 +32,7 @@ function setup(context, route, { primary, fallback = JSON.stringify(route.reply)
     return primary ?? Response.json({ content: [{ type: 'text', text: JSON.stringify(route.reply) }] })
   })
   const load = createTypeScriptLoader({
+    '@/lib/supabase/server': { createClient: async () => ({ auth: { getUser: async () => ({ data: { user: { id: 'verified-test-user', email_confirmed_at: '2026-10-22T00:00:00Z' } }, error: null }) } }) },
     '@/lib/ai/codex-app-server': { requestCodex: async (input) => {
       calls.codex.push(input)
       if (fallbackError) throw fallbackError
@@ -38,7 +41,7 @@ function setup(context, route, { primary, fallback = JSON.stringify(route.reply)
   })
   const post = load(route.file).POST
   const submit = (body = route.body, signal) => post(new Request(`http://localhost/api/${route.name}`, {
-    method: 'POST', body: JSON.stringify(body), signal,
+    method: 'POST', headers: { Origin: 'http://localhost', 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal,
   }))
   return { calls, post, submit }
 }
@@ -110,7 +113,7 @@ for (const route of cases) {
 
   test(`${route.name}: malformed JSON is rejected before inference`, async (context) => {
     const api = setup(context, route)
-    assert.equal((await api.post(new Request('http://localhost/api', { method: 'POST', body: '{' }))).status, 400)
+    assert.equal((await api.post(new Request('http://localhost/api', { method: 'POST', headers: { Origin: 'http://localhost', 'Content-Type': 'application/json' }, body: '{' }))).status, 400)
     assert.equal(api.calls.api.length, 0)
     assert.equal(api.calls.codex.length, 0)
   })

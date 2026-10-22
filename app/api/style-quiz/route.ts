@@ -1,16 +1,25 @@
 import { NextResponse } from 'next/server'
 import { requestAi } from '@/lib/ai/provider'
+import { validateJsonMutation } from '@/lib/request-security'
+import { requireAiUser } from '@/lib/ai/access'
+import { consumeAiQuota } from '@/lib/ai/usage-limit'
 import { STYLE_SCHEMA, stylePrompt, parseStyleResult, readStyleAnswers, recommendedProducts } from '@/lib/ai/shopping'
 
 export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
+  const blocked = validateJsonMutation(request)
+  if (blocked) return blocked
+  const userId = await requireAiUser()
+  if (typeof userId !== 'string') return userId
   let body: unknown
   try { body = await request.json() } catch {
     return NextResponse.json({ error: '스타일 설문 답변을 확인해주세요.' }, { status: 400 })
   }
   const answers = readStyleAnswers(body)
   if (!answers) return NextResponse.json({ error: '스타일 설문 답변을 모두 입력해주세요.' }, { status: 400 })
+  const limited = consumeAiQuota(userId)
+  if (limited) return limited
   try {
     const answer = await requestAi({
       systemPrompt: stylePrompt(), outputSchema: STYLE_SCHEMA, maxTokens: 800,

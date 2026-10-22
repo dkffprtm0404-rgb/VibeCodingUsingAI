@@ -5,6 +5,8 @@
  */
 
 import { API_ROUTES } from '@/constants'
+import type { Product } from '@/types/product'
+import type { StyleQuizAnswer, StyleResult } from '@/types/style'
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -29,7 +31,7 @@ export const authApi = {
       method: 'POST', body: JSON.stringify({ email, password }),
     }),
   signup: (name: string, email: string, password: string) =>
-    fetchApi<{ autoLogin?: boolean; requireLogin?: boolean }>(API_ROUTES.AUTH.SIGNUP, {
+    fetchApi<{ requireEmailConfirmation: true }>(API_ROUTES.AUTH.SIGNUP, {
       method: 'POST', body: JSON.stringify({ name, email, password }),
     }),
   logout: () =>
@@ -62,14 +64,14 @@ export const restockApi = {
 
 export const chatApi = {
   send: (messages: { role: string; content: string }[]) =>
-    fetchApi<{ content: string; recommendedProducts: unknown[] }>(API_ROUTES.CHAT, {
+    fetchApi<{ content: string; recommendedProducts: Product[] }>(API_ROUTES.CHAT, {
       method: 'POST', body: JSON.stringify({ messages }),
     }),
 }
 
 export const styleQuizApi = {
-  analyze: (answers: Record<string, string>) =>
-    fetchApi<{ result: unknown; recommendedProducts: unknown[] }>(API_ROUTES.STYLE_QUIZ, {
+  analyze: (answers: Partial<StyleQuizAnswer>) =>
+    fetchApi<{ result: StyleResult; recommendedProducts: Product[] }>(API_ROUTES.STYLE_QUIZ, {
       method: 'POST', body: JSON.stringify(answers),
     }),
 }

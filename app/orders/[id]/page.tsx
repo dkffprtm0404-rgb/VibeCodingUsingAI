@@ -21,7 +21,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   if (!user) redirect('/login')
 
   const { data: order, error } = await supabase
-    .from('orders').select('*, order_items(*)').eq('id', id).single()
+    .from('orders').select('*, order_items(*)').eq('user_id', user.id).eq('id', id).single()
 
   if (error || !order) notFound()
   const typedOrder = order as Order

@@ -8,6 +8,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { validateJsonMutation } from '@/lib/request-security'
 
 export async function GET() {
   const supabase = await createClient()
@@ -24,6 +25,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const blocked = validateJsonMutation(request)
+  if (blocked) return blocked
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: '로그인이 필요해요.' }, { status: 401 })
@@ -39,6 +42,8 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const blocked = validateJsonMutation(request)
+  if (blocked) return blocked
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: '로그인이 필요해요.' }, { status: 401 })

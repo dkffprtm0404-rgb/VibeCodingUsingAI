@@ -5,6 +5,8 @@
 
 import { useState, useEffect, useRef, useId } from 'react'
 import Link from 'next/link'
+import { authApi } from '@/lib/api'
+import { toast } from '@/components/ui/Toast'
 
 interface MobileMenuProps {
   isLoggedIn: boolean
@@ -39,8 +41,13 @@ export function MobileMenu({ isLoggedIn, userName }: MobileMenuProps) {
   }, [])
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' })
-    window.location.href = '/'
+    try {
+      await authApi.logout()
+      window.location.href = '/'
+    } catch {
+      setIsOpen(false)
+      toast.error('로그아웃하지 못했어요. 다시 시도해주세요.')
+    }
   }
 
   const menuLinks = [

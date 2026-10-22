@@ -4,6 +4,9 @@ export const ANTHROPIC_MESSAGES_URL = 'https://api.anthropic.com/v1/messages'
 export const CLAUDE_TIMEOUT_MS = 15000
 export const CODEX_TIMEOUT_MS = 90000
 export const MAX_AI_RESPONSE_BYTES = 1024 * 1024
+export const AI_USER_MINUTE_LIMIT = 5
+export const AI_USER_DAY_LIMIT = 30
+export const AI_APP_DAY_LIMIT = 100
 
 export const CODEX_DISABLED_FEATURES = [
   'shell_tool', 'unified_exec', 'apps', 'plugins', 'remote_plugin', 'hooks',
