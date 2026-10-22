@@ -2,44 +2,24 @@
  * useRecentlyViewed.ts — 최근 본 상품 훅
  *
  * localStorage 기반으로 최근 본 상품 ID 최대 6개 저장.
- * SSR 안전하게 처리 (isMounted 패턴).
+ * 외부 저장소 구독으로 첫 방문 기록과 SSR 초기 상태를 함께 보장한다.
  */
 
 'use client'
 
-import { useState, useEffect } from 'react'
-
-const STORAGE_KEY = 'myshop-recently-viewed'
-const MAX_ITEMS = 6
+import { useSyncExternalStore } from 'react'
+import {
+  addRecentlyViewedProduct,
+  getRecentlyViewedSnapshot,
+  getServerRecentlyViewedSnapshot,
+  subscribeToRecentlyViewed,
+} from '@/lib/recently-viewed'
 
 export function useRecentlyViewed() {
-  const [ids, setIds] = useState<number[]>([])
-  const [isMounted, setIsMounted] = useState(false)
-
-  useEffect(() => {
-    setIsMounted(true)
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) setIds(JSON.parse(stored))
-    } catch {
-      // localStorage 접근 실패 시 무시
-    }
-  }, [])
-
-  const addProduct = (productId: number) => {
-    if (!isMounted) return
-    setIds((prev) => {
-      // 이미 있으면 맨 앞으로 이동
-      const filtered = prev.filter((id) => id !== productId)
-      const next = [productId, ...filtered].slice(0, MAX_ITEMS)
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-      } catch {
-        // 무시
-      }
-      return next
-    })
-  }
-
-  return { ids: isMounted ? ids : [], addProduct }
+  const ids = useSyncExternalStore(
+    subscribeToRecentlyViewed,
+    getRecentlyViewedSnapshot,
+    getServerRecentlyViewedSnapshot,
+  )
+  return { ids, addProduct: addRecentlyViewedProduct }
 }

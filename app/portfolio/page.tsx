@@ -3,6 +3,7 @@
  */
 
 import type { Metadata } from 'next'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: '포트폴리오 | 정성윤',
@@ -51,9 +52,9 @@ export default function PortfolioPage() {
               </svg>
               GitHub 보기
             </a>
-            <a href="/products" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 12, fontWeight: 700, fontSize: '0.875rem', background: '#fff', color: '#111', border: '1.5px solid #e5e5e5', textDecoration: 'none' }}>
+            <Link href="/products" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 12, fontWeight: 700, fontSize: '0.875rem', background: '#fff', color: '#111', border: '1.5px solid #e5e5e5', textDecoration: 'none' }}>
               라이브 데모 →
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -146,9 +147,9 @@ export default function PortfolioPage() {
                 </svg>
                 소스코드
               </a>
-              <a href="/products" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: '0.8rem', fontWeight: 700, padding: '9px 18px', borderRadius: 9, background: '#111', color: '#fff', textDecoration: 'none' }}>
+              <Link href="/products" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: '0.8rem', fontWeight: 700, padding: '9px 18px', borderRadius: 9, background: '#111', color: '#fff', textDecoration: 'none' }}>
                 Live Demo →
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -216,7 +217,7 @@ export default function PortfolioPage() {
             { emoji: '🐻', name: 'Zustand', role: '전역 상태 관리', color: '#d97706' },
             { emoji: '🐳', name: 'Docker', role: '컨테이너 배포', color: '#2563eb' },
             { emoji: '🌿', name: 'Git', role: '28개 커밋 관리', color: '#dc2626' },
-          ].map(({ emoji, name, role, color }) => (
+          ].map(({ emoji, name, role }) => (
             <div key={name} style={{ background: '#fff', border: '1.5px solid #e5e5e5', borderRadius: 14, padding: '1.25rem', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
               <div style={{ fontSize: '1.75rem', marginBottom: '0.75rem' }}>{emoji}</div>
               <div style={{ fontSize: '0.82rem', fontWeight: 800, marginBottom: '0.25rem', color: '#111' }}>{name}</div>

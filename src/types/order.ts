@@ -2,6 +2,32 @@
  * order.ts — 주문 관련 타입 정의
  */
 
+import type { Product } from '@/types/product'
+
+export interface ShippingInfo {
+  name: string
+  phone: string
+  address: string
+  addressDetail: string
+  memo: string
+}
+
+export interface ValidatedOrderItem {
+  product: Product
+  quantity: number
+  selectedSize?: string
+}
+
+export interface ValidatedOrderRequest {
+  items: ValidatedOrderItem[]
+  shippingInfo: ShippingInfo
+  couponCode?: string | null
+}
+
+export type OrderValidationResult =
+  | { success: true; data: ValidatedOrderRequest }
+  | { success: false; error: string }
+
 export type OrderStatus = 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled'
 
 export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {

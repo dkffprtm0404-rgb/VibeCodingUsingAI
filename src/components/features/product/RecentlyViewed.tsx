@@ -23,7 +23,7 @@ export function RecentlyViewed({ currentProductId }: RecentlyViewedProps) {
   // 현재 상품 최근 본 목록에 추가
   useEffect(() => {
     addProduct(currentProductId)
-  }, [currentProductId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentProductId, addProduct])
 
   // 현재 상품 제외하고 최대 4개
   const recentProducts = ids

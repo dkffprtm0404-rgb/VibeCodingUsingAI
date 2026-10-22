@@ -4,17 +4,16 @@
  */
 
 import { useTheme } from 'next-themes'
-import { useEffect, useState } from 'react'
+import { useHydrated } from '@/hooks/useHydrated'
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+  const { resolvedTheme, setTheme } = useTheme()
+  const mounted = useHydrated()
 
   // Hydration 오류 방지 — 클라이언트에서만 렌더링
-  useEffect(() => setMounted(true), [])
   if (!mounted) return <div className="w-9 h-9" />
 
-  const isDark = theme === 'dark'
+  const isDark = resolvedTheme === 'dark'
 
   return (
     <button

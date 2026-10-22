@@ -12,15 +12,10 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { getAvailableStock } from '@/lib/utils'
+import { getCartQuantityLimit } from '@/lib/utils'
+import { cartStorage } from '@/lib/cart-storage'
+import type { CartItem } from '@/types/cart'
 import type { Product } from '@/types/product'
-
-// 장바구니 아이템 타입
-interface CartItem {
-  product: Product
-  quantity: number
-  selectedSize?: string
-}
 
 // 스토어 전체 타입 (상태 + 액션)
 interface CartStore {
@@ -55,10 +50,9 @@ export const useCartStore = create<CartStore>()(
        */
       addItem: (product, quantity = 1, selectedSize) => {
         if (!Number.isSafeInteger(quantity) || quantity <= 0) return
-        const maxStock = getAvailableStock(product, selectedSize)
-        if (maxStock <= 0) return
-
         set((state) => {
+          const maxStock = getCartQuantityLimit(state.items, product, selectedSize)
+          if (maxStock <= 0) return state
           const existing = state.items.find(
             (i) => i.product.id === product.id && i.selectedSize === selectedSize
           )
@@ -103,7 +97,7 @@ export const useCartStore = create<CartStore>()(
         set((state) => ({
           items: state.items.map((i) =>
             i.product.id === productId && i.selectedSize === selectedSize
-              ? { ...i, quantity: Math.min(quantity, getAvailableStock(i.product, i.selectedSize)) }
+              ? { ...i, quantity: Math.min(quantity, getCartQuantityLimit(state.items, i.product, i.selectedSize)) }
               : i
           ),
         }))
@@ -133,6 +127,8 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: 'myshop-cart', // localStorage 키 이름
+      storage: cartStorage,
+      partialize: (state) => ({ items: state.items }),
     }
   )
 )

@@ -9,18 +9,14 @@
  * 해결: isMounted 상태로 클라이언트에서만 뱃지 렌더링
  */
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useCartStore } from '@/store/cartStore'
+import { useHydrated } from '@/hooks/useHydrated'
 
 export function CartIcon() {
   // 클라이언트 마운트 여부 — false일 때는 뱃지 숨김
-  const [isMounted, setIsMounted] = useState(false)
+  const isMounted = useHydrated()
   const totalCount = useCartStore((state) => state.getTotalCount())
-
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
 
   return (
     <Link

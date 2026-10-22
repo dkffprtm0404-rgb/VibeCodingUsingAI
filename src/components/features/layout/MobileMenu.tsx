@@ -3,7 +3,7 @@
  * MobileMenu.tsx — 모바일 햄버거 메뉴 (다크모드 지원)
  */
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useId } from 'react'
 import Link from 'next/link'
 
 interface MobileMenuProps {
@@ -13,22 +13,30 @@ interface MobileMenuProps {
 
 export function MobileMenu({ isLoggedIn, userName }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  const dialogId = useId()
 
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-    if (isOpen) document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    const dialog = dialogRef.current
+    if (!dialog) return
+    // top layer로 열어 헤더의 backdrop-filter가 만드는 위치 제약을 피한다.
+    if (isOpen && !dialog.open) dialog.showModal()
+    if (!isOpen && dialog.open) dialog.close()
   }, [isOpen])
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [isOpen])
+
+  useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 768px)')
+    const closeOnDesktop = () => {
+      if (desktop.matches) setIsOpen(false)
+    }
+    desktop.addEventListener('change', closeOnDesktop)
+    return () => desktop.removeEventListener('change', closeOnDesktop)
+  }, [])
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -46,32 +54,41 @@ export function MobileMenu({ isLoggedIn, userName }: MobileMenuProps) {
   ]
 
   return (
-    <div ref={menuRef} className="md:hidden">
+    <div className="md:hidden">
       {/* 햄버거 버튼 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex flex-col justify-center items-center w-9 h-9 gap-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         aria-label="메뉴"
+        aria-expanded={isOpen}
+        aria-controls={dialogId}
       >
         <span className={`block h-0.5 bg-gray-900 dark:bg-white transition-all duration-300 ${isOpen ? 'w-5 rotate-45 translate-y-2' : 'w-5'}`} />
         <span className={`block h-0.5 bg-gray-900 dark:bg-white transition-all duration-300 ${isOpen ? 'opacity-0 w-5' : 'w-4'}`} />
         <span className={`block h-0.5 bg-gray-900 dark:bg-white transition-all duration-300 ${isOpen ? 'w-5 -rotate-45 -translate-y-2' : 'w-5'}`} />
       </button>
 
-      {isOpen && <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setIsOpen(false)} />}
-
       {/* 슬라이드 메뉴 */}
-      <div className={`
-        fixed top-0 right-0 h-full w-72 z-50 shadow-2xl
-        bg-white dark:bg-gray-950
-        transform transition-transform duration-300 ease-out
-        ${isOpen ? 'translate-x-0' : 'translate-x-full'}
-      `}>
+      <dialog
+        ref={dialogRef}
+        id={dialogId}
+        aria-label="모바일 메뉴"
+        onCancel={() => setIsOpen(false)}
+        onClose={() => setIsOpen(false)}
+        onClick={(event) => {
+          if (event.target !== event.currentTarget) return
+          const bounds = event.currentTarget.getBoundingClientRect()
+          if (event.clientX < bounds.left || event.clientX > bounds.right
+            || event.clientY < bounds.top || event.clientY > bounds.bottom) setIsOpen(false)
+        }}
+        className="fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-none w-72 max-w-full border-0 p-0 shadow-2xl bg-white text-gray-900 dark:bg-gray-950 dark:text-white backdrop:bg-black/50 open:flex open:flex-col"
+      >
         {/* 헤더 */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
+        <div className="flex shrink-0 items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
           <span className="font-black text-lg text-gray-900 dark:text-white">MyShop</span>
           <button
             onClick={() => setIsOpen(false)}
+            aria-label="메뉴 닫기"
             className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 text-xl"
           >
             ×
@@ -80,14 +97,14 @@ export function MobileMenu({ isLoggedIn, userName }: MobileMenuProps) {
 
         {/* 유저 정보 */}
         {isLoggedIn && (
-          <div className="px-5 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+          <div className="shrink-0 px-5 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
             <p className="text-sm text-gray-500 dark:text-gray-400">안녕하세요 👋</p>
             <p className="font-semibold text-gray-900 dark:text-white">{userName}님</p>
           </div>
         )}
 
         {/* 메뉴 링크 */}
-        <nav className="p-4 space-y-1">
+        <nav className="min-h-0 flex-1 overflow-y-auto p-4 space-y-1">
           {menuLinks.map(({ href, label, icon }) => (
             <Link
               key={href}
@@ -102,7 +119,7 @@ export function MobileMenu({ isLoggedIn, userName }: MobileMenuProps) {
         </nav>
 
         {/* 하단 버튼 */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
+        <div className="shrink-0 p-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
           {isLoggedIn ? (
             <button
               onClick={handleLogout}
@@ -123,7 +140,7 @@ export function MobileMenu({ isLoggedIn, userName }: MobileMenuProps) {
             </div>
           )}
         </div>
-      </div>
+      </dialog>
     </div>
   )
 }

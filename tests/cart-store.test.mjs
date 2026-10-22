@@ -155,3 +155,101 @@ test('persist restores valid items and retains working cart actions after reload
   reloadedStore.getState().clearCart()
   assert.deepEqual(reloadedStore.getState().items, [])
 })
+
+function restore(items, extraState = {}) {
+  window.localStorage.setItem('myshop-cart', JSON.stringify({ state: { items, ...extraState }, version: 0 }))
+  return createTypeScriptLoader()('src/store/cartStore.ts').useCartStore
+}
+
+test('restoration refreshes product facts and caps old size quantities at current stock', () => {
+  const restored = restore([{ product: { ...product, price: 1, name: '이전 이름', stock: 999 }, quantity: 12, selectedSize: 'XL' }])
+  const state = restored.getState()
+  assert.equal(state.items[0].quantity, 5)
+  assert.equal(state.items[0].product.name, '클래식 화이트 티셔츠')
+  assert.equal(state.items[0].product.price, 29000)
+  assert.equal(state.getTotalPrice(), 145000)
+  state.updateQuantity(1, 3, 'XL')
+  assert.equal(restored.getState().getTotalCount(), 3)
+})
+
+test('restoration retains valid rows and drops sold-out, missing, and damaged rows', () => {
+  const restored = restore([
+    { product: { id: 1 }, quantity: 2, selectedSize: 'XL' },
+    { product: { id: 7 }, quantity: 1 },
+    { product: { id: 999 }, quantity: 1 },
+    { product: { id: 1 }, quantity: 1, selectedSize: 'UNKNOWN' },
+    { product: { id: 1 }, quantity: 1, selectedSize: null },
+    { product: { id: 1 }, quantity: 1, selectedSize: '' },
+    { product: { id: '1' }, quantity: 1 },
+    { product: { id: 1 }, quantity: 0 },
+    { product: { id: 1 }, quantity: -1 },
+    { product: { id: 1 }, quantity: 1.5 },
+    { product: { id: 1 }, quantity: '2' },
+    { product: { id: 1 }, quantity: null },
+    { quantity: 1 }, null,
+  ])
+  assert.deepEqual(restored.getState().items.map(({ product, quantity, selectedSize }) => [product.id, quantity, selectedSize]), [[1, 2, 'XL']])
+  assert.equal(restored.getState().getTotalPrice(), 58000)
+})
+
+test('restoration merges duplicate rows without exceeding size stock', () => {
+  const restored = restore([
+    { product: { id: 1 }, quantity: 3, selectedSize: 'XL' },
+    { product: { id: 1 }, quantity: 4, selectedSize: 'XL' },
+    { product: { id: 1 }, quantity: 2, selectedSize: 'M' },
+  ])
+  assert.deepEqual(restored.getState().items.map(({ selectedSize, quantity }) => [selectedSize, quantity]), [['XL', 5], ['M', 2]])
+})
+
+test('legacy rows use current total stock and combined size rows cannot exceed product stock', () => {
+  const restored = restore([
+    { product: { id: 1 }, quantity: 49 },
+    { product: { id: 1 }, quantity: 5, selectedSize: 'XL' },
+  ])
+  assert.deepEqual(restored.getState().items.map(({ selectedSize, quantity }) => [selectedSize, quantity]), [[undefined, 49], ['XL', 1]])
+  assert.equal(restored.getState().getTotalCount(), 50)
+})
+
+test('quantity changes after restoration respect stock reserved by other size rows', () => {
+  const restored = restore([
+    { product: { id: 1 }, quantity: 49 },
+    { product: { id: 1 }, quantity: 1, selectedSize: 'XL' },
+  ])
+  restored.getState().updateQuantity(1, 5, 'XL')
+  assert.equal(restored.getState().getTotalCount(), 50)
+  restored.getState().addItem(product, 4, 'XL')
+  assert.equal(restored.getState().getTotalCount(), 50)
+})
+
+for (const items of [null, {}, 'damaged']) {
+  test(`restores an empty usable cart when saved items is ${JSON.stringify(items)}`, () => {
+    const restored = restore(items)
+    assert.deepEqual(restored.getState().items, [])
+    restored.getState().addItem(product, 2, 'XL')
+    assert.equal(restored.getState().getTotalCount(), 2)
+  })
+}
+
+test('persisted data cannot overwrite store actions', () => {
+  const restored = restore([{ product: { id: 1 }, quantity: 1 }], { clearCart: 'broken', getTotalPrice: null })
+  assert.equal(restored.getState().getTotalPrice(), 29000)
+  restored.getState().clearCart()
+  assert.deepEqual(restored.getState().items, [])
+})
+
+test('invalid JSON recovers hydration and leaves a usable cart', () => {
+  window.localStorage.setItem('myshop-cart', '{')
+  const restored = createTypeScriptLoader()('src/store/cartStore.ts').useCartStore
+  assert.deepEqual(restored.getState().items, [])
+  assert.equal(restored.persist.hasHydrated(), true)
+  restored.getState().addItem(product, 2, 'XL')
+  assert.equal(restored.getState().getTotalCount(), 2)
+})
+
+test('blocked storage preserves working cart actions in memory', () => {
+  window.localStorage.getItem = () => { throw new Error('blocked') }
+  window.localStorage.setItem = () => { throw new Error('blocked') }
+  const restored = createTypeScriptLoader()('src/store/cartStore.ts').useCartStore
+  assert.doesNotThrow(() => restored.getState().addItem(product, 2, 'XL'))
+  assert.equal(restored.getState().getTotalCount(), 2)
+})

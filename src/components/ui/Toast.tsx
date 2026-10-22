@@ -7,7 +7,6 @@
  * zustand로 전역 상태 관리 → 어디서든 호출 가능.
  */
 
-import { useEffect } from 'react'
 import { create } from 'zustand'
 import { cn } from '@/lib/utils'
 

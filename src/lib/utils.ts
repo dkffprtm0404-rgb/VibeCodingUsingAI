@@ -4,6 +4,7 @@
 
 import { clsx, type ClassValue } from 'clsx'
 import type { Product } from '@/types/product'
+import type { CartItem } from '@/types/cart'
 
 /**
  * cn: Tailwind 클래스 병합 유틸
@@ -22,10 +23,22 @@ export function formatPrice(price: number): string {
   return new Intl.NumberFormat('ko-KR').format(price) + '원'
 }
 
+/** JSON 등 외부 입력에서 배열·null을 제외한 객체만 허용한다. */
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
 /** 선택한 사이즈의 재고. 사이즈가 생략된 기존 항목만 전체 재고를 사용합니다. */
 export function getAvailableStock(product: Product, selectedSize?: string): number {
   if (selectedSize === undefined) return product.stock
   return product.sizes.find((size) => size.size === selectedSize)?.stock ?? 0
+}
+
+/** 다른 사이즈·기존 사이즈 미선택 항목이 점유한 재고를 제외한 행별 수량 상한. */
+export function getCartQuantityLimit(items: CartItem[], product: Product, selectedSize?: string): number {
+  const reserved = items.reduce((sum, item) =>
+    item.product.id === product.id && item.selectedSize !== selectedSize ? sum + item.quantity : sum, 0)
+  return Math.max(0, Math.min(getAvailableStock(product, selectedSize), product.stock - reserved))
 }
 
 /**

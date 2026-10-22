@@ -14,11 +14,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-import { MOCK_PRODUCTS } from '@/lib/mock-data'
 import { validateCoupon } from '@/lib/coupons'
-
-const SHIPPING_FEE = 3000
-const FREE_SHIPPING_THRESHOLD = 50000
+import { validateOrderRequest } from '@/lib/order-validation'
+import { SHIPPING_FEE, SHIPPING_THRESHOLD } from '@/constants'
 
 export async function POST(request: Request) {
   try {
@@ -30,25 +28,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: '로그인이 필요해요.' }, { status: 401 })
     }
 
-    const { items, shippingInfo, couponCode } = await request.json()
-
-    if (!items?.length) {
-      return NextResponse.json({ error: '주문 상품이 없어요.' }, { status: 400 })
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: '주문 요청 형식을 확인해주세요.' }, { status: 400 })
     }
+    const validation = validateOrderRequest(body)
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 })
+    }
+    const { items, shippingInfo, couponCode } = validation.data
 
     // 클라이언트가 보낸 가격을 신뢰하지 않고 서버에서 직접 재계산
-    const productTotal = items.reduce((sum: number, item: { product: { id: number }; quantity: number }) => {
-      const product = MOCK_PRODUCTS.find((p) => p.id === item.product.id)
-      if (!product) return sum
-      return sum + product.price * item.quantity
-    }, 0)
-
-    if (productTotal === 0) {
-      return NextResponse.json({ error: '유효한 상품이 없어요.' }, { status: 400 })
-    }
+    const productTotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
 
     // 배송비는 할인 전 상품 금액 기준으로 계산
-    const computedShippingFee = productTotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE
+    const computedShippingFee = productTotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE
 
     // 쿠폰 서버 재검증 — 클라이언트가 보낸 할인 금액은 신뢰하지 않음
     let discountAmount = 0
@@ -88,18 +84,14 @@ export async function POST(request: Request) {
     if (orderError) throw orderError
 
     // 2단계: order_items 일괄 삽입 (가격도 서버 데이터 기준, 할인 전 단가)
-    const orderItems = items.flatMap((item: { product: { id: number }; quantity: number }) => {
-      const product = MOCK_PRODUCTS.find((p) => p.id === item.product.id)
-      if (!product) return []
-      return [{
+    const orderItems = items.map(({ product, quantity }) => ({
         order_id: order.id,
         product_id: product.id,
         product_name: product.name,
         product_price: product.price,
         product_image: product.imageUrl,
-        quantity: item.quantity,
-      }]
-    })
+        quantity,
+    }))
 
     const { error: itemsError } = await adminClient
       .from('order_items')
