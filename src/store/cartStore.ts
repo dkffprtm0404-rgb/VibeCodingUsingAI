@@ -12,6 +12,7 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { getAvailableStock } from '@/lib/utils'
 import type { Product } from '@/types/product'
 
 // 장바구니 아이템 타입
@@ -53,15 +54,16 @@ export const useCartStore = create<CartStore>()(
        * - 없는 상품이면 새로 추가
        */
       addItem: (product, quantity = 1, selectedSize) => {
+        if (!Number.isSafeInteger(quantity) || quantity <= 0) return
+        const maxStock = getAvailableStock(product, selectedSize)
+        if (maxStock <= 0) return
+
         set((state) => {
           const existing = state.items.find(
             (i) => i.product.id === product.id && i.selectedSize === selectedSize
           )
 
           if (existing) {
-            const maxStock = selectedSize
-              ? (product.sizes.find((s) => s.size === selectedSize)?.stock ?? product.stock)
-              : product.stock
             return {
               items: state.items.map((i) =>
                 i.product.id === product.id && i.selectedSize === selectedSize
@@ -71,7 +73,9 @@ export const useCartStore = create<CartStore>()(
             }
           }
 
-          return { items: [...state.items, { product, quantity, selectedSize }] }
+          return {
+            items: [...state.items, { product, quantity: Math.min(quantity, maxStock), selectedSize }],
+          }
         })
       },
 
@@ -91,13 +95,16 @@ export const useCartStore = create<CartStore>()(
        * 수량이 0 이하가 되면 자동으로 제거
        */
       updateQuantity: (productId, quantity, selectedSize) => {
+        if (!Number.isInteger(quantity)) return
         if (quantity <= 0) {
           get().removeItem(productId, selectedSize)
           return
         }
         set((state) => ({
           items: state.items.map((i) =>
-            i.product.id === productId && i.selectedSize === selectedSize ? { ...i, quantity } : i
+            i.product.id === productId && i.selectedSize === selectedSize
+              ? { ...i, quantity: Math.min(quantity, getAvailableStock(i.product, i.selectedSize)) }
+              : i
           ),
         }))
       },

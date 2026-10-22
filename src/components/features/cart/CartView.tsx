@@ -12,7 +12,7 @@ import { QuantitySelector } from '@/components/features/product/QuantitySelector
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { AvailableCoupons } from '@/components/features/order/AvailableCoupons'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, getAvailableStock } from '@/lib/utils'
 
 export function CartView() {
   const router = useRouter()
@@ -77,7 +77,7 @@ export function CartView() {
                 <QuantitySelector
                   value={quantity}
                   min={1}
-                  max={product.stock}
+                  max={getAvailableStock(product, selectedSize)}
                   onChange={(val) => updateQuantity(product.id, val, selectedSize)}
                 />
                 <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{formatPrice(product.price * quantity)}</p>

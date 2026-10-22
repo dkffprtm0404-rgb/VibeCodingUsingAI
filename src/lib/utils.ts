@@ -3,6 +3,7 @@
  */
 
 import { clsx, type ClassValue } from 'clsx'
+import type { Product } from '@/types/product'
 
 /**
  * cn: Tailwind 클래스 병합 유틸
@@ -19,6 +20,12 @@ export function cn(...inputs: ClassValue[]): string {
  */
 export function formatPrice(price: number): string {
   return new Intl.NumberFormat('ko-KR').format(price) + '원'
+}
+
+/** 선택한 사이즈의 재고. 사이즈가 생략된 기존 항목만 전체 재고를 사용합니다. */
+export function getAvailableStock(product: Product, selectedSize?: string): number {
+  if (selectedSize === undefined) return product.stock
+  return product.sizes.find((size) => size.size === selectedSize)?.stock ?? 0
 }
 
 /**
