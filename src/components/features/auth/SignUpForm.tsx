@@ -26,12 +26,9 @@ export function SignUpForm() {
     await signUp(name, email, password, passwordConfirm)
   }
 
-  const baseInput =
-    'w-full px-4 py-3 rounded-xl border text-sm outline-none transition-colors placeholder:text-gray-400 ' +
-    'bg-white dark:bg-gray-800 text-gray-900 dark:text-white '
+  const baseInput = 'shop-input'
 
-  const normalInput = cn(baseInput,
-    'border-gray-300 dark:border-gray-600 focus:border-gray-900 dark:focus:border-white focus:ring-2 focus:ring-gray-900/10 dark:focus:ring-white/10')
+  const normalInput = baseInput
   const errorInput = cn(baseInput,
     'border-red-400 dark:border-red-600 focus:ring-2 focus:ring-red-400/10')
 
@@ -41,21 +38,21 @@ export function SignUpForm() {
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-1.5">
         <label htmlFor="name" className={labelClass}>이름</label>
-        <input id="name" type="text" value={name} required
+        <input id="name" type="text" autoComplete="name" value={name} required
           onChange={(e) => setName(e.target.value)}
           placeholder="홍길동" className={normalInput} />
       </div>
 
       <div className="space-y-1.5">
         <label htmlFor="email" className={labelClass}>이메일</label>
-        <input id="email" type="email" value={email} required
+        <input id="email" type="email" autoComplete="email" value={email} required
           onChange={(e) => setEmail(e.target.value)}
           placeholder="example@email.com" className={normalInput} />
       </div>
 
       <div className="space-y-1.5">
         <label htmlFor="password" className={labelClass}>비밀번호</label>
-        <input id="password" type="password" value={password} required
+        <input id="password" type="password" autoComplete="new-password" value={password} required aria-invalid={isPasswordTooShort}
           onChange={(e) => setPassword(e.target.value)}
           placeholder={`${MIN_PASSWORD_LENGTH}자 이상 입력해주세요`}
           className={isPasswordTooShort ? errorInput : normalInput} />
@@ -66,7 +63,7 @@ export function SignUpForm() {
 
       <div className="space-y-1.5">
         <label htmlFor="passwordConfirm" className={labelClass}>비밀번호 확인</label>
-        <input id="passwordConfirm" type="password" value={passwordConfirm} required
+        <input id="passwordConfirm" type="password" autoComplete="new-password" value={passwordConfirm} required aria-invalid={isPasswordMismatch}
           onChange={(e) => setPasswordConfirm(e.target.value)}
           placeholder="비밀번호를 다시 입력해주세요"
           className={isPasswordMismatch ? errorInput : normalInput} />
@@ -76,7 +73,7 @@ export function SignUpForm() {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl">
+        <div role="alert" className="flex items-center gap-2 px-4 py-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl">
           <span className="text-sm">⚠️</span>
           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
         </div>
@@ -87,9 +84,9 @@ export function SignUpForm() {
         회원가입
       </Button>
 
-      <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+      <p className="shop-muted flex flex-wrap items-center justify-center gap-x-2 text-sm">
         이미 계정이 있으신가요?{' '}
-        <Link href="/login" className="font-medium text-gray-900 dark:text-white hover:underline underline-offset-2">
+        <Link href="/login" className="inline-flex min-h-11 items-center font-medium text-gray-900 underline-offset-4 hover:underline dark:text-white">
           로그인
         </Link>
       </p>

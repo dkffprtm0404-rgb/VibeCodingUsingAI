@@ -21,7 +21,7 @@ export function CartIcon() {
   return (
     <Link
       href="/cart"
-      className="relative flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+      className="shop-icon-button relative"
       aria-label="장바구니"
     >
       <svg

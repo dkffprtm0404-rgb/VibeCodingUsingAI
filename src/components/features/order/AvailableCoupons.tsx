@@ -26,9 +26,9 @@ export function AvailableCoupons({ totalPrice }: AvailableCouponsProps) {
   }
 
   return (
-    <div className="space-y-2">
-      <p className="text-sm font-semibold text-gray-900 dark:text-white">🎁 사용 가능한 쿠폰</p>
-      <div className="space-y-2">
+    <div className="space-y-4">
+      <p className="text-sm font-semibold text-gray-900 dark:text-white">사용 가능한 쿠폰</p>
+      <div className="space-y-3">
         {MOCK_COUPONS.map((coupon) => {
           const isEligible = !coupon.minPrice || totalPrice >= coupon.minPrice
           const discount = calculateDiscount(coupon, totalPrice)
@@ -37,18 +37,18 @@ export function AvailableCoupons({ totalPrice }: AvailableCouponsProps) {
             <div
               key={coupon.code}
               className={cn(
-                'flex items-center justify-between gap-3 px-4 py-3 rounded-xl border text-sm transition-opacity',
+                'flex flex-wrap items-center justify-between gap-3 px-4 py-4 rounded-2xl border text-sm transition-opacity',
                 isEligible
-                  ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'
-                  : 'bg-gray-50 dark:bg-gray-900 border-gray-100 dark:border-gray-800 opacity-50'
+                  ? 'bg-sage-50 dark:bg-sage-950 border-sage-200 dark:border-sage-800'
+                  : 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800'
               )}
             >
               <div className="min-w-0">
-                <p className="font-medium text-gray-900 dark:text-white truncate">{coupon.label}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                <p className="font-medium text-gray-900 dark:text-white">{coupon.label}</p>
+                <p className="shop-muted mt-1 text-xs leading-6">
                   {coupon.minPrice ? `${formatPrice(coupon.minPrice)} 이상 구매 시` : '구매 금액 제한 없음'}
                   {isEligible && discount > 0 && (
-                    <span className="text-green-600 dark:text-green-400 font-medium"> · {formatPrice(discount)} 할인</span>
+                    <span className="font-medium text-sage-700 dark:text-sage-200"> · {formatPrice(discount)} 할인</span>
                   )}
                 </p>
               </div>
@@ -57,7 +57,7 @@ export function AvailableCoupons({ totalPrice }: AvailableCouponsProps) {
                 onClick={() => handleCopy(coupon.code)}
                 disabled={!isEligible}
                 className={cn(
-                  'flex-shrink-0 font-mono text-xs font-bold px-3 py-1.5 rounded-lg border transition-colors',
+                  'min-h-11 flex-shrink-0 font-mono text-xs font-semibold px-3 py-2.5 rounded-xl border transition-colors',
                   isEligible
                     ? 'border-gray-300 dark:border-gray-500 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'
                     : 'border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600 cursor-not-allowed'

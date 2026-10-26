@@ -18,3 +18,9 @@ export interface StyleResult {
   productIds: number[]
   tip: string
 }
+
+export interface PersonalizationProfile {
+  result: StyleResult
+  ownerId: string
+  createdAt: number
+}

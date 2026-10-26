@@ -18,16 +18,21 @@ export function ScrollToTop() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
+  const scrollToTop = () => window.scrollTo({
+    top: 0,
+    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+  })
+
+  if (!visible) return null
 
   return (
     <button
       onClick={scrollToTop}
       aria-label="페이지 상단으로 이동"
       className={cn(
-        'fixed bottom-24 right-4 sm:right-6 z-40',
-        'w-10 h-10 bg-white border border-gray-200 rounded-xl shadow-md',
-        'flex items-center justify-center text-gray-600',
+        'shop-scroll-top fixed right-4 sm:right-6 z-30',
+        'w-11 h-11 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-full',
+        'flex items-center justify-center text-gray-600 dark:text-gray-200',
         'hover:bg-gray-50 hover:shadow-lg transition-all duration-200',
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
       )}

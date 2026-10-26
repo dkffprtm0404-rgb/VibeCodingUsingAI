@@ -5,7 +5,6 @@
  */
 
 import Link from 'next/link'
-import { Button } from './Button'
 
 interface EmptyStateProps {
   icon: string
@@ -23,16 +22,14 @@ export function EmptyState({
   actionHref,
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-24 text-center">
-      <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-        <span className="text-3xl">{icon}</span>
+    <div className="shop-surface flex flex-col items-center justify-center px-5 py-20 text-center sm:py-24">
+      <div className="mb-6 flex size-20 items-center justify-center rounded-3xl bg-sage-100 dark:bg-sage-900">
+        <span aria-hidden="true" className="text-3xl">{icon}</span>
       </div>
       <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{title}</h2>
       {description && <p className="text-gray-500 dark:text-gray-400 text-sm mb-8">{description}</p>}
       {actionLabel && actionHref && (
-        <Link href={actionHref}>
-          <Button>{actionLabel}</Button>
-        </Link>
+        <Link href={actionHref} className="shop-primary-link">{actionLabel}</Link>
       )}
     </div>
   )

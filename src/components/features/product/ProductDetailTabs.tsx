@@ -9,25 +9,37 @@ import type { Product } from '@/types/product'
 
 type Tab = 'detail' | 'size' | 'delivery'
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: 'detail', label: '상품 설명' },
-  { key: 'size', label: '사이즈 가이드' },
-  { key: 'delivery', label: '배송 안내' },
-]
-
 export function ProductDetailTabs({ product }: { product: Product }) {
   const [activeTab, setActiveTab] = useState<Tab>('detail')
+  const isBeauty = product.channels?.includes('beauty') ?? false
+  const isFootwear = product.category === '신발'
+  const isAccessory = product.category === '가방' || product.category === '액세서리'
+  const fitLabel = isBeauty ? '사용 타입' : isFootwear ? '착화 안내' : isAccessory ? '디자인 안내' : '핏 안내'
+  const tabs: { key: Tab; label: string }[] = [
+    { key: 'detail', label: '상품 설명' },
+    { key: 'size', label: isBeauty ? '용량·구성 안내' : isAccessory ? '크기·옵션 안내' : '사이즈 가이드' },
+    { key: 'delivery', label: '배송 안내' },
+  ]
+  const careTips = isBeauty
+    ? ['상품별 성분과 사용법은 실제 제품 안내를 확인해주세요.', '제품별 사용 기한과 보관 안내를 확인해주세요.']
+    : isAccessory
+      ? ['소재별 관리 방법은 원문 상품 안내를 확인해주세요.', '부드러운 천으로 관리하고 통풍이 잘 되는 곳에 보관해주세요.']
+      : isFootwear
+      ? ['상품 소재에 맞는 관리 방법을 확인해주세요.', '오염은 부드러운 천으로 가볍게 닦아주세요.', '통풍이 잘 되는 곳에 보관해주세요.']
+      : ['세탁기 사용 시 단독 세탁 또는 세탁망 사용 권장', '울/캐시미어 소재는 손세탁 또는 드라이클리닝', '건조기 사용 금지', '직사광선을 피해 음지에서 건조']
 
   return (
-    <div className="mt-16">
+    <section className="shop-surface mt-8 min-w-0 px-4 sm:mt-12 sm:px-8">
       {/* 탭 헤더 */}
-      <div className="flex border-b border-gray-200 dark:border-gray-700">
-        {TABS.map(({ key, label }) => (
+      <div className="grid grid-cols-3 border-b border-gray-200 dark:border-gray-700" role="group" aria-label="상품 상세 정보">
+        {tabs.map(({ key, label }) => (
           <button
             key={key}
+            type="button"
+            aria-pressed={activeTab === key}
             onClick={() => setActiveTab(key)}
             className={cn(
-              'px-6 py-4 text-sm font-medium transition-colors relative',
+              'relative min-h-14 px-1 py-4 text-xs font-medium transition-colors sm:px-6 sm:py-5 sm:text-sm',
               activeTab === key
                 ? 'text-gray-900 dark:text-white'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'
@@ -41,11 +53,11 @@ export function ProductDetailTabs({ product }: { product: Product }) {
         ))}
       </div>
 
-      <div className="py-10">
+      <div className="py-7 sm:py-9">
 
         {/* 상품 설명 */}
         {activeTab === 'detail' && (
-          <div className="max-w-2xl space-y-10">
+          <div className="max-w-3xl space-y-7">
             <div className="space-y-4">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">제품 소개</h3>
               <p className="text-gray-600 dark:text-gray-100 leading-relaxed text-base">
@@ -55,24 +67,19 @@ export function ProductDetailTabs({ product }: { product: Product }) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-5 space-y-2">
-                <p className="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider">소재</p>
+                <p className="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider">{isBeauty ? '구성' : '소재'}</p>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{product.material}</p>
               </div>
               <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-5 space-y-2">
-                <p className="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider">핏 안내</p>
+                <p className="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wider">{fitLabel}</p>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{product.fit}</p>
               </div>
             </div>
 
             <div className="border border-gray-200 dark:border-gray-700 rounded-2xl p-5 space-y-3">
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white">세탁 및 관리</h3>
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white">{isBeauty ? '제품 안내' : isFootwear || isAccessory ? '상품 관리' : '세탁 및 관리'}</h3>
               <ul className="space-y-2">
-                {[
-                  '세탁기 사용 시 단독 세탁 또는 세탁망 사용 권장',
-                  '울/캐시미어 소재는 손세탁 또는 드라이클리닝',
-                  '건조기 사용 금지',
-                  '직사광선을 피해 음지에서 건조',
-                ].map((tip) => (
+                {careTips.map((tip) => (
                   <li key={tip} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-100">
                     <span className="text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0">•</span>
                     {tip}
@@ -87,9 +94,9 @@ export function ProductDetailTabs({ product }: { product: Product }) {
         {activeTab === 'size' && (
           <div className="max-w-2xl space-y-6">
             <div className="space-y-2">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">사이즈 실측 정보</h3>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">{isBeauty ? '용량 및 구성 안내' : isAccessory ? '크기 및 옵션 정보' : '사이즈 정보'}</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                모든 측정값은 평평하게 놓은 상태에서 측정한 값입니다.
+                {isBeauty ? '선택할 용량과 옵션별 구성을 확인해주세요.' : '옵션별 상세 정보와 재고를 확인해주세요.'}
               </p>
             </div>
 
@@ -97,8 +104,8 @@ export function ProductDetailTabs({ product }: { product: Product }) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left px-4 py-3 font-semibold text-gray-700 dark:text-white w-16">사이즈</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-700 dark:text-white">실측 정보</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-700 dark:text-white">{isBeauty ? '용량' : isAccessory ? '옵션' : '사이즈'}</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-700 dark:text-white">{isBeauty ? '구성 안내' : '상세 정보'}</th>
                     <th className="text-center px-4 py-3 font-semibold text-gray-700 dark:text-white w-20">재고</th>
                   </tr>
                 </thead>
@@ -115,7 +122,7 @@ export function ProductDetailTabs({ product }: { product: Product }) {
                     >
                       <td className="px-4 py-3.5">
                         <span className={cn(
-                          'inline-flex items-center justify-center w-9 h-9 rounded-lg text-sm font-bold',
+                          'inline-flex min-h-10 min-w-10 items-center justify-center whitespace-nowrap rounded-lg px-2 text-xs font-bold',
                           sizeInfo.stock === 0
                             ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
                             : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
@@ -141,9 +148,9 @@ export function ProductDetailTabs({ product }: { product: Product }) {
               </table>
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-800 rounded-2xl p-5 space-y-2">
-              <p className="text-sm font-semibold text-blue-800 dark:text-blue-200">💡 핏 안내</p>
-              <p className="text-sm text-blue-700 dark:text-blue-100">{product.fit}</p>
+            <div className="space-y-2 rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-800">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">{fitLabel}</p>
+              <p className="shop-muted text-sm leading-7">{product.fit}</p>
             </div>
           </div>
         )}
@@ -195,6 +202,6 @@ export function ProductDetailTabs({ product }: { product: Product }) {
           </div>
         )}
       </div>
-    </div>
+    </section>
   )
 }

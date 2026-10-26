@@ -108,7 +108,7 @@ test('uses server product facts, capped coupon discount and discount-before-ship
   assert.equal(api.writes[0].payload.user_id, 'test-user')
   assert.equal(api.writes[0].payload.receiver_name, '테스트')
   assert.equal(api.writes[1].table, 'order_items')
-  assert.equal(api.writes[1].payload[0].product_name, '클래식 화이트 티셔츠')
+  assert.equal(api.writes[1].payload[0].product_name, '그래픽 레이어드 스웨트셔츠')
   assert.equal(api.writes[1].payload[0].product_price, 29000)
   assert.equal(api.writes[1].payload[0].quantity, 2)
 })

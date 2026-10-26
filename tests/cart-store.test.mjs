@@ -165,7 +165,7 @@ test('restoration refreshes product facts and caps old size quantities at curren
   const restored = restore([{ product: { ...product, price: 1, name: '이전 이름', stock: 999 }, quantity: 12, selectedSize: 'XL' }])
   const state = restored.getState()
   assert.equal(state.items[0].quantity, 5)
-  assert.equal(state.items[0].product.name, '클래식 화이트 티셔츠')
+  assert.equal(state.items[0].product.name, '그래픽 레이어드 스웨트셔츠')
   assert.equal(state.items[0].product.price, 29000)
   assert.equal(state.getTotalPrice(), 145000)
   state.updateQuantity(1, 3, 'XL')

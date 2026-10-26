@@ -18,8 +18,8 @@ export default function GlobalError({ error, reset }: ErrorProps) {
   }, [error])
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 bg-white dark:bg-gray-950">
-      <div className="max-w-md w-full text-center space-y-8">
+    <div className="shop-page flex min-h-[65vh] items-center justify-center">
+      <div className="shop-surface w-full max-w-lg space-y-8 p-8 text-center sm:p-12">
         <div className="relative mx-auto w-24 h-24">
           <div className="absolute inset-0 rounded-full bg-red-50 dark:bg-red-950/30 border-2 border-dashed border-red-200 dark:border-red-800" />
           <div className="absolute inset-0 flex items-center justify-center text-4xl">⚠️</div>
@@ -40,7 +40,7 @@ export default function GlobalError({ error, reset }: ErrorProps) {
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button variant="outline" size="lg" onClick={reset} className="w-full sm:w-auto">다시 시도</Button>
-          <Link href="/"><Button size="lg" className="w-full sm:w-auto">홈으로 가기</Button></Link>
+          <Link href="/" className="shop-primary-link w-full sm:w-auto">홈으로 가기</Link>
         </div>
       </div>
     </div>

@@ -28,29 +28,27 @@ export function CouponInput({ totalPrice, onApply }: CouponInputProps) {
     onApply(appliedCoupon)
   }, [appliedCoupon, onApply])
 
-  const inputClass =
-    'flex-1 px-4 py-3 rounded-xl border text-sm outline-none transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-500 ' +
-    'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white ' +
-    'focus:border-gray-900 dark:focus:border-white focus:ring-2 focus:ring-gray-900/8 dark:focus:ring-white/10'
+  const inputClass = 'shop-input min-w-0 flex-1'
 
   return (
     <div className="space-y-2">
       <p className="text-sm font-semibold text-gray-900 dark:text-white">쿠폰</p>
 
       {appliedCoupon ? (
-        <div className="flex items-center justify-between px-4 py-3 bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-xl">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sage-200 bg-sage-100 px-4 py-4 dark:border-sage-800 dark:bg-sage-900">
           <div className="flex items-center gap-2">
             <span className="text-base">🎁</span>
             <div>
-              <p className="text-sm font-medium text-green-800 dark:text-green-300">{appliedCoupon.label}</p>
-              <p className="text-xs text-green-600 dark:text-green-400">
+              <p className="text-sm font-medium text-sage-800 dark:text-sage-100">{appliedCoupon.label}</p>
+              <p className="mt-1 text-xs text-sage-700 dark:text-sage-200">
                 -{formatPrice(appliedCoupon.discountAmount)} 할인 적용됨
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={remove}
-            className="text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors flex-shrink-0"
+            className="shop-muted min-h-11 shrink-0 px-3 text-xs transition-colors hover:text-red-600 dark:hover:text-red-400"
           >
             취소
           </button>
@@ -58,7 +56,9 @@ export function CouponInput({ totalPrice, onApply }: CouponInputProps) {
       ) : (
         <>
           <div className="flex gap-2">
+            <label htmlFor="coupon-code" className="sr-only">쿠폰 코드</label>
             <input
+              id="coupon-code"
               type="text"
               value={code}
               onChange={(e) => setCode(e.target.value)}

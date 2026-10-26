@@ -1,7 +1,4 @@
 'use client'
-/**
- * ProductCard.tsx — 상품 카드 (다크모드 지원)
- */
 
 import { useState } from 'react'
 import Image from 'next/image'
@@ -10,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { formatPrice, getStockStatus, cn } from '@/lib/utils'
 import { useCartStore } from '@/store/cartStore'
 import { toast } from '@/components/ui/Toast'
-import { CRITICAL_STOCK_THRESHOLD } from '@/constants'
+import { CRITICAL_STOCK_THRESHOLD, LOW_STOCK_THRESHOLD } from '@/constants'
 import type { Product } from '@/types/product'
 
 interface ProductCardProps {
@@ -23,10 +20,10 @@ export function ProductCard({ product, isLoggedIn = false }: ProductCardProps) {
   const addItem = useCartStore((state) => state.addItem)
   const [imgError, setImgError] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
-
   const stockStatus = getStockStatus(product.stock)
   const isSoldOut = product.stock === 0
   const hasSingleSize = product.sizes.length === 1
+  const optionLabel = product.optionLabel ?? '사이즈 선택'
 
   const handleQuickAdd = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -45,74 +42,55 @@ export function ProductCard({ product, isLoggedIn = false }: ProductCardProps) {
   }
 
   return (
-    <Link
-      href={`/products/${product.id}`}
-      className="group block bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-600 hover:shadow-md transition-all duration-200"
-    >
-      <div className="relative aspect-square bg-gray-50 dark:bg-gray-800 overflow-hidden">
-        {imgError ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-300 dark:text-gray-600">
-            <span className="text-4xl mb-1">🛍️</span>
-            <span className="text-xs">이미지 없음</span>
-          </div>
-        ) : (
-          <Image
-            src={product.imageUrl}
-            alt={product.name}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className={cn(
-              'object-cover transition-transform duration-500 group-hover:scale-105',
-              isSoldOut && 'opacity-50'
-            )}
-            onError={() => setImgError(true)}
-          />
-        )}
-
-        {isSoldOut && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="bg-white/90 dark:bg-black/80 backdrop-blur-sm text-gray-800 dark:text-white text-xs font-bold px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700">
-              SOLD OUT
-            </span>
-          </div>
-        )}
-
-        {!isSoldOut && product.stock <= CRITICAL_STOCK_THRESHOLD && (
-          <div className="absolute top-2 right-2">
-            <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-full">
-              LAST {product.stock}
-            </span>
-          </div>
-        )}
-
-        <div className="absolute top-2 left-2">
-          <span className="bg-white/90 dark:bg-black/70 backdrop-blur-sm text-gray-700 dark:text-gray-300 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-gray-200 dark:border-gray-700">
+    <article className="shop-surface group relative min-w-0 overflow-hidden transition-shadow duration-300 hover:shadow-lg hover:shadow-gray-900/5">
+      <Link href={`/products/${product.id}`} className="block h-full">
+        <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 dark:bg-gray-800">
+          {imgError ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-gray-500 dark:text-gray-400">
+              <span className="text-3xl" aria-hidden="true">◇</span>
+              <span className="text-xs">이미지 없음</span>
+            </div>
+          ) : (
+            <Image
+              src={product.imageUrl}
+              alt={product.name}
+              fill
+              sizes="(max-width: 374px) 100vw, (max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className={cn('object-cover transition-transform duration-700 motion-safe:group-hover:scale-[1.04]', isSoldOut && 'opacity-50')}
+              onError={() => setImgError(true)}
+            />
+          )}
+          <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-medium tracking-wide text-gray-800 backdrop-blur-sm dark:bg-gray-950/90 dark:text-gray-200">
             {product.category}
           </span>
+          {isSoldOut && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="rounded-full bg-white/95 px-4 py-2 text-xs font-semibold tracking-widest text-gray-900 dark:bg-gray-950/95 dark:text-white">SOLD OUT</span>
+            </div>
+          )}
+          {!isSoldOut && product.stock <= CRITICAL_STOCK_THRESHOLD && (
+            <span className="absolute bottom-3 left-3 rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-medium text-gray-800 dark:bg-gray-950/90 dark:text-gray-200">잔여 {product.stock}개</span>
+          )}
         </div>
-
-        {!isSoldOut && (
-          <div className="absolute inset-x-0 bottom-0 translate-y-full group-hover:translate-y-0 transition-transform duration-200">
-            <button
-              onClick={handleQuickAdd}
-              disabled={isAdding}
-              className="w-full py-2.5 bg-gray-900/90 dark:bg-white/90 backdrop-blur-sm text-white dark:text-gray-900 text-xs font-semibold hover:bg-gray-900 dark:hover:bg-white transition-colors disabled:opacity-70"
-            >
-              {isAdding ? '담는 중...' : hasSingleSize ? '빠른 담기' : '사이즈 선택'}
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div className="p-4 space-y-1.5">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-white line-clamp-1 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
-          {product.name}
-        </h3>
-        <div className="flex items-center justify-between">
-          <p className="text-base font-bold text-gray-900 dark:text-white">{formatPrice(product.price)}</p>
-          <p className={cn('text-[11px] font-medium', stockStatus.color)}>{stockStatus.label}</p>
+        <div className="space-y-2 p-3.5 sm:p-5">
+          {product.brand && <p className="truncate text-[10px] font-semibold tracking-wide text-gray-600 dark:text-gray-300">{product.brand}</p>}
+          <h3 className="line-clamp-2 min-h-10 text-sm font-medium leading-5 text-gray-900 dark:text-white">{product.name}</h3>
+          <p className="text-sm font-semibold tracking-tight text-gray-900 sm:text-base dark:text-white">{formatPrice(product.price)}</p>
+          <p className={cn('text-[11px] font-medium', isSoldOut ? 'text-red-700 dark:text-red-300' : product.stock <= LOW_STOCK_THRESHOLD ? 'text-orange-700 dark:text-orange-300' : 'text-sage-700 dark:text-sage-200')}>{stockStatus.label}</p>
         </div>
-      </div>
-    </Link>
+      </Link>
+      {!isSoldOut && (
+        <button
+          type="button"
+          onClick={handleQuickAdd}
+          disabled={isAdding}
+          aria-label={`${product.name} ${hasSingleSize ? '빠른 담기' : optionLabel}`}
+          title={isAdding ? '담는 중...' : hasSingleSize ? '빠른 담기' : optionLabel}
+          className="absolute right-2 top-2 flex size-11 items-center justify-center rounded-full border border-white/50 bg-white/95 text-gray-900 shadow-sm backdrop-blur-sm transition-colors hover:bg-gray-900 hover:text-white disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950/95 dark:text-white dark:hover:bg-white dark:hover:text-gray-900"
+        >
+          <span aria-hidden="true" className="text-xl font-light leading-none">{isAdding ? '✓' : '+'}</span>
+        </button>
+      )}
+    </article>
   )
 }

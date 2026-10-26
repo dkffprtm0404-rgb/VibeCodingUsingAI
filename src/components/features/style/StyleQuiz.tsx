@@ -1,16 +1,12 @@
 'use client'
-/**
- * StyleQuiz.tsx — AI 스타일 진단 퀴즈 컴포넌트 (다크모드 지원)
- */
-
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
-import { formatPrice } from '@/lib/utils'
-import { ApiError, styleQuizApi } from '@/lib/api'
-import type { Product } from '@/types/product'
-import type { StyleResult, StyleQuizAnswer } from '@/types/style'
+import { usePersonalization } from '@/hooks/usePersonalization'
+import { useStyleQuiz } from '@/hooks/useStyleQuiz'
+import { cn, formatPrice } from '@/lib/utils'
+import type { StyleQuizAnswer } from '@/types/style'
 
 const QUESTIONS = [
   {
@@ -59,17 +55,12 @@ const QUESTIONS = [
   },
 ]
 
-type Step = 'quiz' | 'loading' | 'result'
-
 export function StyleQuiz() {
-  const [step, setStep] = useState<Step>('quiz')
+  const [showResult, setShowResult] = useState(true)
   const [currentQ, setCurrentQ] = useState(0)
   const [answers, setAnswers] = useState<Partial<StyleQuizAnswer>>({})
-  const [result, setResult] = useState<StyleResult | null>(null)
-  const [products, setProducts] = useState<Product[]>([])
-  const [error, setError] = useState('')
-  const [loginRequired, setLoginRequired] = useState(false)
-
+  const { result, products, analyze, isAnalyzing, error, loginRequired, clearError } = useStyleQuiz()
+  const { clearProfile } = usePersonalization()
   const progress = (currentQ / QUESTIONS.length) * 100
 
   const handleSelect = async (value: string) => {
@@ -80,183 +71,163 @@ export function StyleQuiz() {
     if (currentQ < QUESTIONS.length - 1) {
       setCurrentQ(currentQ + 1)
     } else {
-      setStep('loading')
-      try {
-        const data = await styleQuizApi.analyze(newAnswers)
-        setResult(data.result)
-        setProducts(data.recommendedProducts)
-        setStep('result')
-      } catch (error) {
-        setLoginRequired(error instanceof ApiError && error.status === 401)
-        setError(error instanceof ApiError ? error.message : '분석 중 오류가 발생했어요. 다시 시도해주세요.')
-        setStep('quiz')
-        setCurrentQ(0)
-        setAnswers({})
-      }
+      if (await analyze(newAnswers)) setShowResult(true)
     }
   }
 
-  const handleReset = () => {
-    setStep('quiz'); setCurrentQ(0); setAnswers({})
-    setResult(null); setProducts([]); setError(''); setLoginRequired(false)
+  const handleRestart = () => {
+    setShowResult(false)
+    setCurrentQ(0)
+    setAnswers({})
+    clearError()
   }
 
-  if (step === 'quiz') {
+  if (isAnalyzing) {
+    return (
+      <section className="shop-surface px-6 py-16 text-center sm:px-10" role="status" aria-live="polite">
+        <div className="mx-auto mb-7 flex size-20 items-center justify-center rounded-full bg-sage-100 text-sage-800 dark:bg-sage-900/40 dark:text-sage-200">
+          <span className="size-8 rounded-full border-2 border-sage-300 border-t-sage-800 motion-safe:animate-spin dark:border-sage-700 dark:border-t-sage-200" aria-hidden="true" />
+        </div>
+        <p className="shop-kicker">Finding your style</p>
+        <h2 className="shop-heading mt-3 text-2xl">당신의 취향을 살펴보고 있어요</h2>
+        <p className="shop-muted mx-auto mt-3 max-w-sm text-sm leading-relaxed">
+          네 가지 답변으로 스타일과 코디를 제안해드려요. 잠시만 기다려주세요.
+        </p>
+      </section>
+    )
+  }
+
+  if (!showResult || !result) {
     const q = QUESTIONS[currentQ]
     return (
-      <div className="max-w-2xl mx-auto space-y-8">
-        {/* 진행바 */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500">
-            <span>{currentQ + 1} / {QUESTIONS.length}</span>
-            <span>{Math.round(progress)}%</span>
+      <section className="shop-surface p-5 sm:p-9" aria-labelledby="style-question">
+        <div className="mb-9 space-y-3">
+          <div className="flex items-center justify-between gap-3 text-xs font-medium">
+            <span className="shop-kicker">Your preference</span>
+            <span className="shop-muted" aria-live="polite">질문 {currentQ + 1} / {QUESTIONS.length}</span>
           </div>
-          <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-            <div className="h-full bg-gray-900 dark:bg-white rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }} />
-          </div>
+          <progress value={currentQ} max={QUESTIONS.length} aria-label={`스타일 진단 진행률 ${Math.round(progress)}%`}
+            className="block h-2 w-full overflow-hidden rounded-full accent-sage-700 [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-gray-100 [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-sage-700 dark:[&::-webkit-progress-bar]:bg-gray-800" />
         </div>
-
-        {/* 질문 */}
-        <div className="text-center space-y-2">
-          <span className="text-4xl">{q.emoji}</span>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">{q.title}</h2>
+        <div className="mb-7 space-y-3 text-center">
+          <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-sage-50 text-3xl dark:bg-sage-900/30" aria-hidden="true">{q.emoji}</span>
+          <h2 id="style-question" className="shop-heading text-xl sm:text-2xl">{q.title}</h2>
+          <p className="shop-muted text-sm">가장 마음에 드는 하나를 선택해주세요.</p>
         </div>
 
         {error && (
-          <div className="px-4 py-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl text-sm text-red-600 dark:text-red-400 text-center">
+          <div role="alert" className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
             {error}
           </div>
         )}
         {loginRequired && (
-          <Link href="/login?callbackUrl=/style-quiz" className="block text-center underline text-gray-900 dark:text-white">
+          <Link href="/login?callbackUrl=/style-quiz" className="mb-5 flex min-h-11 items-center justify-center rounded-xl bg-sage-800 px-4 py-3 text-center text-sm font-semibold text-white dark:bg-sage-200 dark:text-sage-950">
             로그인하고 스타일 진단하기
           </Link>
         )}
 
-        {/* 선택지 */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2" role="group" aria-labelledby="style-question">
           {q.options.map((opt) => (
             <button
+              type="button"
               key={opt.value}
               onClick={() => handleSelect(opt.value)}
-              className="group flex flex-col items-center gap-2 p-5
-                         bg-white dark:bg-gray-800
-                         border-2 border-gray-100 dark:border-gray-700
-                         hover:border-gray-900 dark:hover:border-white
-                         rounded-2xl hover:shadow-md transition-all duration-150 text-center"
+              aria-pressed={answers[q.key] === opt.value}
+              className={cn(
+                'group flex min-h-32 items-center gap-4 rounded-2xl border p-5 text-left transition-colors sm:min-h-36 sm:flex-col sm:gap-2 sm:text-center',
+                answers[q.key] === opt.value
+                  ? 'border-sage-600 bg-sage-50 dark:border-sage-400 dark:bg-sage-900/30'
+                  : 'border-gray-200 bg-white hover:border-sage-500 hover:bg-sage-50/60 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-sage-400 dark:hover:bg-sage-900/20',
+              )}
             >
-              <span className="text-3xl group-hover:scale-110 transition-transform duration-150">{opt.emoji}</span>
-              <span className="font-semibold text-sm text-gray-900 dark:text-white">{opt.label}</span>
-              <span className="text-xs text-gray-400 dark:text-gray-500">{opt.desc}</span>
+              <span className="text-2xl" aria-hidden="true">{opt.emoji}</span>
+              <span className="space-y-1">
+                <span className="block text-sm font-semibold text-gray-900 dark:text-gray-100">{opt.label}</span>
+                <span className="shop-muted block text-xs">{opt.desc}</span>
+              </span>
             </button>
           ))}
         </div>
 
-        {currentQ > 0 && (
-          <button onClick={() => setCurrentQ(currentQ - 1)}
-            className="w-full text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-            ← 이전 질문으로
-          </button>
-        )}
-      </div>
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
+          <Button variant="ghost" size="sm" disabled={currentQ === 0} onClick={() => setCurrentQ(currentQ - 1)}>
+            ← 이전 질문
+          </Button>
+          {result && <Button variant="ghost" size="sm" onClick={() => { clearError(); setShowResult(true) }}>이전 진단 결과 보기</Button>}
+        </div>
+        <p className="shop-muted mt-5 border-t border-gray-100 pt-5 text-xs leading-relaxed dark:border-gray-800">
+          진단 결과는 현재 로그인 계정으로 이 탭에 저장돼요. 새 진단이 완료될 때까지 이전 결과가 유지됩니다.
+        </p>
+      </section>
     )
   }
 
-  if (step === 'loading') {
-    return (
-      <div className="max-w-2xl mx-auto text-center space-y-8 py-16">
-        <div className="relative mx-auto w-24 h-24">
-          <div className="absolute inset-0 rounded-full border-4 border-gray-100 dark:border-gray-800 border-t-gray-900 dark:border-t-white animate-spin" />
-          <div className="absolute inset-0 flex items-center justify-center text-3xl">🤖</div>
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">AI가 스타일을 분석하고 있어요</h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">답변을 바탕으로 맞춤 스타일을 찾고 있어요...</p>
-        </div>
-        <div className="flex flex-col gap-2 text-sm text-gray-400 dark:text-gray-500">
-          {['스타일 패턴 분석 중...', '코디 조합 생성 중...', '맞춤 상품 선별 중...'].map((text, i) => (
-            <p key={text} className="animate-pulse" style={{ animationDelay: `${i * 0.5}s` }}>{text}</p>
+  return (
+    <div className="space-y-5">
+      <section className="shop-surface overflow-hidden p-6 text-center sm:p-10" aria-labelledby="style-result">
+        <p className="shop-kicker">Your style, discovered</p>
+        <div className="mx-auto my-5 flex size-24 items-center justify-center rounded-3xl bg-sage-100 text-5xl dark:bg-sage-900/40" aria-hidden="true">{result.emoji}</div>
+        <h2 id="style-result" className="shop-heading text-2xl sm:text-3xl">{result.type}</h2>
+        <p className="shop-muted mx-auto mt-4 max-w-md text-sm leading-relaxed">{result.description}</p>
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
+          {[...new Set(result.keywords)].map((keyword) => (
+            <span key={keyword} className="rounded-full bg-sage-50 px-3 py-1.5 text-xs font-medium text-sage-800 dark:bg-sage-900/40 dark:text-sage-200">#{keyword}</span>
           ))}
         </div>
+      </section>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <section className="shop-surface p-6">
+          <p className="shop-kicker">Outfit idea</p>
+          <h3 className="shop-heading mb-3 mt-2 text-lg">이렇게 입어보세요</h3>
+          <p className="shop-muted text-sm leading-relaxed">{result.coordi}</p>
+        </section>
+        <section className="rounded-3xl border border-sage-200 bg-sage-50 p-6 dark:border-sage-800 dark:bg-sage-900/25">
+          <p className="shop-kicker">Styling note</p>
+          <h3 className="shop-heading mb-3 mt-2 text-lg">작은 스타일링 팁</h3>
+          <p className="text-sm leading-relaxed text-sage-900 dark:text-sage-200">{result.tip}</p>
+        </section>
       </div>
-    )
-  }
 
-  if (step === 'result' && result) {
-    return (
-      <div className="max-w-2xl mx-auto space-y-8">
-        {/* 유형 카드 — 항상 다크 */}
-        <div className="relative bg-gray-900 text-white rounded-3xl p-8 text-center space-y-4 overflow-hidden">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-20 translate-x-20" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-16 -translate-x-16" />
-          <div className="relative space-y-3">
-            <p className="text-xs font-semibold tracking-widest uppercase text-gray-400">나의 스타일 유형</p>
-            <div className="text-6xl">{result.emoji}</div>
-            <h2 className="text-2xl font-bold">{result.type}</h2>
-            <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">{result.description}</p>
-            <div className="flex flex-wrap gap-2 justify-center pt-2">
-              {result.keywords.map((kw) => (
-                <span key={kw} className="px-3 py-1 bg-white/10 rounded-full text-xs font-medium"># {kw}</span>
-              ))}
-            </div>
+      <section className="shop-surface p-5 sm:p-7" aria-labelledby="style-products">
+        <p className="shop-kicker">Selected for you</p>
+        <h3 id="style-products" className="shop-heading mb-2 mt-2 text-xl">진단으로 찾은 상품</h3>
+        <p className="shop-muted mb-5 text-xs leading-relaxed">방금 진단한 스타일을 바탕으로 AI가 제안한 상품이에요.</p>
+        {products.length > 0 ? (
+          <div className="space-y-3">
+            {products.map((product) => (
+              <Link key={product.id} href={`/products/${product.id}`}
+                className="group flex items-center gap-4 rounded-2xl border border-gray-100 p-3 transition-colors hover:border-sage-400 dark:border-gray-800 dark:hover:border-sage-600">
+                <div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
+                  <Image src={product.imageUrl} alt={product.name} fill sizes="80px"
+                    className="object-cover transition-transform duration-300 motion-safe:group-hover:scale-105" />
+                </div>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <span className="shop-muted text-xs">{product.category}</span>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{product.name}</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{formatPrice(product.price)}</p>
+                </div>
+                <span className="shop-muted pr-1" aria-hidden="true">→</span>
+              </Link>
+            ))}
           </div>
-        </div>
-
-        {/* 추천 코디 */}
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 space-y-3">
-          <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2"><span>👗</span> 추천 코디</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-200 leading-relaxed">{result.coordi}</p>
-        </div>
-
-        {/* 스타일링 팁 */}
-        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-800 rounded-2xl p-5 flex gap-3">
-          <span className="text-xl flex-shrink-0">💡</span>
-          <div>
-            <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1">스타일링 TIP</p>
-            <p className="text-sm text-amber-800 dark:text-amber-200">{result.tip}</p>
-          </div>
-        </div>
-
-        {/* 추천 상품 */}
-        {products.length > 0 && (
-          <div className="space-y-4">
-            <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <span>🛍️</span> 당신을 위한 추천 상품
-            </h3>
-            <div className="grid grid-cols-1 gap-3">
-              {products.map((product) => (
-                <Link key={product.id} href={`/products/${product.id}`}
-                  className="group flex gap-4 p-4 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-2xl hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-sm transition-all">
-                  <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0">
-                    <Image src={product.imageUrl} alt={product.name} fill sizes="80px"
-                      className="object-cover group-hover:scale-105 transition-transform duration-300" />
-                  </div>
-                  <div className="flex-1 flex flex-col justify-center space-y-1">
-                    <span className="text-xs text-gray-400 dark:text-gray-500">{product.category}</span>
-                    <p className="font-medium text-gray-900 dark:text-white text-sm">{product.name}</p>
-                    <p className="font-bold text-gray-900 dark:text-white">{formatPrice(product.price)}</p>
-                  </div>
-                  <div className="flex items-center text-gray-300 dark:text-gray-600 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M9 18l6-6-6-6" />
-                    </svg>
-                  </div>
-                </Link>
-              ))}
-            </div>
+        ) : (
+          <div className="rounded-2xl bg-gray-50 p-5 dark:bg-gray-800/60">
+            <p className="shop-heading text-sm">스타일 진단이 완료됐어요.</p>
+            <p className="shop-muted mt-2 text-sm leading-relaxed">지금 구매 가능한 추천 상품이 없어요. 전체 셀렉션에서 마음에 드는 상품을 찾아보세요.</p>
+            <Link href="/products" className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-sage-800 underline underline-offset-4 dark:text-sage-200">전체 셀렉션 둘러보기 →</Link>
           </div>
         )}
+      </section>
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button variant="outline" size="lg" className="flex-1" onClick={handleReset}>다시 진단하기</Button>
-          <Link href="/products" className="flex-1">
-            <Button size="lg" className="w-full">전체 상품 보기 →</Button>
-          </Link>
+      <div className="space-y-3 pt-2">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Button variant="outline" size="lg" onClick={handleRestart}>다시 진단하기</Button>
+          <Link href="/" className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-sage-800 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-sage-900 dark:bg-sage-200 dark:text-sage-950 dark:hover:bg-sage-100">홈에서 나의 추천 보기 →</Link>
         </div>
+        <button type="button" onClick={() => { clearProfile(); handleRestart() }}
+          className="shop-muted mx-auto flex min-h-11 items-center px-4 text-xs underline underline-offset-4">개인화 초기화</button>
       </div>
-    )
-  }
-
-  return null
+    </div>
+  )
 }

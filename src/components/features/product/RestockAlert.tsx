@@ -38,10 +38,12 @@ export function RestockAlert({ productId, isLoggedIn }: RestockAlertProps) {
   return (
     <div className="space-y-1">
       <button
+        type="button"
+        aria-pressed={isAlerted}
         onClick={handleClick}
         disabled={isLoading}
         className={cn(
-          'w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl',
+          'w-full min-h-12 flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl',
           'text-sm font-semibold border-2 transition-all duration-150 disabled:opacity-50',
           isAlerted
             ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-gray-900 dark:border-white'
@@ -52,7 +54,7 @@ export function RestockAlert({ productId, isLoggedIn }: RestockAlertProps) {
         {isAlerted ? '재입고 알림 신청됨' : '재입고 알림 신청'}
       </button>
       {error && <p className="text-xs text-red-500 text-center">{error}</p>}
-      <p className="text-xs text-gray-400 text-center">
+      <p className="shop-muted pt-2 text-center text-xs leading-6">
         {isAlerted
           ? '재입고 시 이메일로 알려드려요'
           : '품절 상품이 다시 입고되면 알림을 보내드려요'

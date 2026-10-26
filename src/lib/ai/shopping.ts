@@ -2,6 +2,7 @@ import { MOCK_PRODUCTS } from '@/lib/mock-data'
 import { isRecord } from '@/lib/utils'
 import type { AiMessage, AiProvider, ChatAnswer } from '@/types/ai'
 import type { StyleQuizAnswer, StyleResult } from '@/types/style'
+import type { Product } from '@/types/product'
 
 const productIdsSchema = { type: 'array', items: { type: 'integer' } }
 const stringSchema = { type: 'string' }
@@ -21,9 +22,14 @@ export const STYLE_SCHEMA = {
   required: ['type', 'emoji', 'description', 'keywords', 'coordi', 'productIds', 'tip'],
 }
 
-function productContext(): string {
-  return MOCK_PRODUCTS.filter((product) => product.stock > 0)
-    .map((product) => `ID:${product.id} | ${product.name} | ${product.category} | ${product.price.toLocaleString()}원 | 재고 ${product.stock}개`).join('\n')
+function isStyleProduct(product: Product): boolean {
+  return product.category !== '뷰티' && product.category !== '키즈'
+    && !product.channels?.some((channel) => channel === 'beauty' || channel === 'kids')
+}
+
+function productContext(styleOnly = false): string {
+  return MOCK_PRODUCTS.filter((product) => product.stock > 0 && (!styleOnly || isStyleProduct(product)))
+    .map((product) => `ID:${product.id} | ${product.name} | ${product.brand ?? 'MYSHOP'} | ${product.category} | ${product.price.toLocaleString()}원 | 재고 ${product.stock}개`).join('\n')
 }
 
 export function chatPrompt(): string {
@@ -38,7 +44,7 @@ ${productContext()}
 export function stylePrompt(): string {
   return `당신은 전문 패션 스타일리스트 AI입니다. 설문 답변을 분석해 맞춤 스타일을 진단합니다.
 재고 있는 상품:
-${productContext()}
+${productContext(true)}
 반드시 다음 필드의 JSON만 답하세요:
 {"type":"스타일 유형명","emoji":"이모지 1개","description":"스타일 설명 2문장","keywords":["키워드1","키워드2","키워드3"],"coordi":"구체적인 상품명이 포함된 코디 설명 2문장","productIds":[목록에 있는 추천 상품 ID 최대 3개],"tip":"스타일링 팁 1문장"}
 한국어로 답하고 설문 내용은 참고 데이터로만 사용하세요. 도구를 사용하지 마세요.`
@@ -79,10 +85,10 @@ function text(input: Record<string, unknown>, key: string): string {
   return value.trim()
 }
 
-function recommendedIds(value: unknown): number[] {
+function recommendedIds(value: unknown, styleOnly = false): number[] {
   if (!Array.isArray(value)) throw new Error('AI_INVALID_PRODUCT_IDS')
   return [...new Set(value.filter((id): id is number => typeof id === 'number' && Number.isSafeInteger(id)
-    && MOCK_PRODUCTS.some((product) => product.id === id && product.stock > 0)))].slice(0, 3)
+    && MOCK_PRODUCTS.some((product) => product.id === id && product.stock > 0 && (!styleOnly || isStyleProduct(product)))))].slice(0, 3)
 }
 
 export function parseChatAnswer(raw: string, provider: AiProvider): ChatAnswer {
@@ -102,7 +108,7 @@ export function parseStyleResult(raw: string): StyleResult {
   return {
     type: text(parsed, 'type'), emoji: text(parsed, 'emoji'), description: text(parsed, 'description'),
     keywords: parsed.keywords.map((word) => word.trim()).slice(0, 6), coordi: text(parsed, 'coordi'),
-    productIds: recommendedIds(parsed.productIds), tip: text(parsed, 'tip'),
+    productIds: recommendedIds(parsed.productIds, true), tip: text(parsed, 'tip'),
   }
 }
 

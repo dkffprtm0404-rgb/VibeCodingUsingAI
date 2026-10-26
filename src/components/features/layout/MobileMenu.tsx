@@ -7,6 +7,8 @@ import { useState, useEffect, useRef, useId } from 'react'
 import Link from 'next/link'
 import { authApi } from '@/lib/api'
 import { toast } from '@/components/ui/Toast'
+import { Icon, type IconName } from '@/components/ui/Icon'
+import { STORE_CHANNELS } from '@/constants/catalog'
 
 interface MobileMenuProps {
   isLoggedIn: boolean
@@ -50,13 +52,12 @@ export function MobileMenu({ isLoggedIn, userName }: MobileMenuProps) {
     }
   }
 
-  const menuLinks = [
-    { href: '/products', label: '상품', icon: '🛍️' },
-    { href: '/style-quiz', label: 'AI 스타일 진단', icon: '✨' },
+  const menuLinks: { href: string; label: string; icon: IconName }[] = [
+    { href: '/style-quiz', label: 'AI 스타일 진단', icon: 'sparkles' },
     ...(isLoggedIn ? [
-      { href: '/cart', label: '장바구니', icon: '🛒' },
-      { href: '/orders', label: '주문내역', icon: '📦' },
-      { href: '/mypage/wishlist', label: '찜한 상품', icon: '❤️' },
+      { href: '/cart', label: '장바구니', icon: 'bag' as const },
+      { href: '/orders', label: '주문내역', icon: 'user' as const },
+      { href: '/mypage/wishlist', label: '찜한 상품', icon: 'heart' as const },
     ] : []),
   ]
 
@@ -65,14 +66,12 @@ export function MobileMenu({ isLoggedIn, userName }: MobileMenuProps) {
       {/* 햄버거 버튼 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex flex-col justify-center items-center w-9 h-9 gap-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        className="shop-icon-button"
         aria-label="메뉴"
         aria-expanded={isOpen}
         aria-controls={dialogId}
       >
-        <span className={`block h-0.5 bg-gray-900 dark:bg-white transition-all duration-300 ${isOpen ? 'w-5 rotate-45 translate-y-2' : 'w-5'}`} />
-        <span className={`block h-0.5 bg-gray-900 dark:bg-white transition-all duration-300 ${isOpen ? 'opacity-0 w-5' : 'w-4'}`} />
-        <span className={`block h-0.5 bg-gray-900 dark:bg-white transition-all duration-300 ${isOpen ? 'w-5 -rotate-45 -translate-y-2' : 'w-5'}`} />
+        <Icon name={isOpen ? 'close' : 'menu'} />
       </button>
 
       {/* 슬라이드 메뉴 */}
@@ -88,7 +87,7 @@ export function MobileMenu({ isLoggedIn, userName }: MobileMenuProps) {
           if (event.clientX < bounds.left || event.clientX > bounds.right
             || event.clientY < bounds.top || event.clientY > bounds.bottom) setIsOpen(false)
         }}
-        className="fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-none w-72 max-w-full border-0 p-0 shadow-2xl bg-white text-gray-900 dark:bg-gray-950 dark:text-white backdrop:bg-black/50 open:flex open:flex-col"
+        className="fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-none w-80 max-w-full border-0 p-0 bg-background text-foreground backdrop:bg-black/40 open:flex open:flex-col"
       >
         {/* 헤더 */}
         <div className="flex shrink-0 items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
@@ -96,30 +95,44 @@ export function MobileMenu({ isLoggedIn, userName }: MobileMenuProps) {
           <button
             onClick={() => setIsOpen(false)}
             aria-label="메뉴 닫기"
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 text-xl"
+            className="shop-icon-button"
           >
-            ×
+            <Icon name="close" />
           </button>
         </div>
 
         {/* 유저 정보 */}
         {isLoggedIn && (
           <div className="shrink-0 px-5 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
-            <p className="text-sm text-gray-500 dark:text-gray-400">안녕하세요 👋</p>
+            <p className="shop-kicker mb-1">Your everyday, curated</p>
             <p className="font-semibold text-gray-900 dark:text-white">{userName}님</p>
           </div>
         )}
 
         {/* 메뉴 링크 */}
-        <nav className="min-h-0 flex-1 overflow-y-auto p-4 space-y-1">
+        <nav aria-label="모바일 탐색" className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 space-y-1">
+          <p className="shop-kicker px-2 pt-2 pb-3">Shop by store</p>
+          <div className="mb-5 grid grid-cols-2 gap-2 border-b border-gray-100 pb-5 dark:border-gray-800">
+            {STORE_CHANNELS.map((store) => (
+              <Link
+                key={store.id}
+                href={store.id === 'all' ? '/products' : `/products?store=${store.id}`}
+                onClick={() => setIsOpen(false)}
+                className="flex min-h-12 items-center justify-between gap-2 rounded-xl bg-gray-50 px-4 py-3 text-sm font-medium text-gray-800 transition-colors hover:bg-sage-100 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-sage-950"
+              >
+                {store.id === 'all' ? '전체 스토어' : store.label}
+                <Icon name="arrow" className="size-3.5 text-gray-400" />
+              </Link>
+            ))}
+          </div>
           {menuLinks.map(({ href, label, icon }) => (
             <Link
               key={href}
               href={href}
               onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors"
+              className="flex min-h-11 items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
-              <span className="text-lg">{icon}</span>
+              <Icon name={icon} className="text-sage-700 dark:text-sage-200" />
               <span className="font-medium text-sm">{label}</span>
             </Link>
           ))}

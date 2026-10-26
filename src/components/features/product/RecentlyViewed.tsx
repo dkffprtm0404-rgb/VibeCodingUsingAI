@@ -7,11 +7,9 @@
  */
 
 import { useEffect } from 'react'
-import Image from 'next/image'
-import Link from 'next/link'
+import { ProductCard } from './ProductCard'
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed'
 import { MOCK_PRODUCTS } from '@/lib/mock-data'
-import { formatPrice } from '@/lib/utils'
 
 interface RecentlyViewedProps {
   currentProductId: number  // 현재 보고 있는 상품 제외용
@@ -35,33 +33,16 @@ export function RecentlyViewed({ currentProductId }: RecentlyViewedProps) {
   if (recentProducts.length === 0) return null
 
   return (
-    <div className="mt-16">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">최근 본 상품</h2>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <section className="mt-12 sm:mt-16">
+      <p className="shop-kicker mb-2">On your mind</p>
+      <h2 className="mb-6 text-xl font-semibold tracking-tight text-gray-900 dark:text-white">이 기기에서 최근 본 상품</h2>
+      <div className="grid grid-cols-1 gap-4 min-[375px]:grid-cols-2 md:grid-cols-3 sm:gap-5 xl:grid-cols-4 lg:gap-6">
         {recentProducts.map((product) => (
           product && (
-            <Link
-              key={product.id}
-              href={`/products/${product.id}`}
-              className="group block bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-md transition-all"
-            >
-              <div className="relative aspect-square bg-gray-50 overflow-hidden">
-                <Image
-                  src={product.imageUrl}
-                  alt={product.name}
-                  fill
-                  sizes="25vw"
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <div className="p-3 space-y-1">
-                <p className="text-sm font-medium text-gray-900 line-clamp-1">{product.name}</p>
-                <p className="text-sm font-bold text-gray-900">{formatPrice(product.price)}</p>
-              </div>
-            </Link>
+            <ProductCard key={product.id} product={product} />
           )
         ))}
       </div>
-    </div>
+    </section>
   )
 }

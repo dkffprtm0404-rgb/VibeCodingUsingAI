@@ -1,5 +1,7 @@
 // 상품 관련 타입 정의
 
+export type StoreChannelId = 'fashion' | 'beauty' | 'sports' | 'outlet' | 'boutique' | 'kicks' | 'kids'
+
 export interface SizeInfo {
   size: string        // ex) S, M, L, XL / 28, 30, 32
   measurements: string // ex) "가슴 96cm / 어깨 42cm / 총장 68cm"
@@ -18,6 +20,10 @@ export interface Product {
   imageUrl: string
   images: string[]        // 다중 이미지 (썸네일 + 착용샷)
   category: string
+  channels?: StoreChannelId[]
+  brand?: string
+  optionLabel?: string
+  imageSource?: { label: string; url: string }
   description: string
   detailDescription: string  // 상세 설명 (긴 텍스트)
   material: string           // 소재

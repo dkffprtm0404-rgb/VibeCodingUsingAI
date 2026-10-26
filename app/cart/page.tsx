@@ -9,8 +9,12 @@ export const metadata: Metadata = { title: '장바구니' }
 
 export default function CartPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">장바구니</h1>
+    <div className="shop-page py-10 sm:py-14">
+      <header className="mb-8 space-y-3 sm:mb-10">
+        <p className="shop-kicker">Your selection</p>
+        <h1 className="shop-heading">장바구니</h1>
+        <p className="shop-muted text-sm">마음에 담은 취향, 이제 나의 일상으로.</p>
+      </header>
       <CartView />
     </div>
   )

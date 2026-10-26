@@ -7,7 +7,6 @@ import { createClient } from '@/lib/supabase/server'
 import { MOCK_PRODUCTS } from '@/lib/mock-data'
 import { ProductCard } from '@/components/features/product/ProductCard'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { SectionHeader } from '@/components/ui/SectionHeader'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: '찜한 상품' }
@@ -26,11 +25,12 @@ export default async function WishlistPage() {
   const wishedProducts = MOCK_PRODUCTS.filter((p) => wishedIds.includes(p.id))
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <SectionHeader
-        title="찜한 상품"
-        description={`총 ${wishedProducts.length}개의 상품을 찜했어요`}
-      />
+    <div className="shop-page py-10 sm:py-14">
+      <header className="mb-8 space-y-3 sm:mb-10">
+        <p className="shop-kicker">Saved for a little later</p>
+        <h1 className="shop-heading">찜한 상품</h1>
+        <p className="shop-muted text-sm">총 {wishedProducts.length}개의 상품을 찜했어요</p>
+      </header>
 
       {wishedProducts.length === 0 ? (
         <EmptyState
@@ -41,7 +41,7 @@ export default async function WishlistPage() {
           actionHref="/products"
         />
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 gap-4 min-[375px]:grid-cols-2 md:grid-cols-3 sm:gap-5 xl:grid-cols-4 lg:gap-6">
           {wishedProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

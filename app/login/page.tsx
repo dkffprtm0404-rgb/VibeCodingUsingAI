@@ -22,17 +22,29 @@ export default async function LoginPage({
   const { signup, confirmation } = await searchParams
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 bg-gray-50 dark:bg-gray-950">
-      <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 space-y-8">
-          <div className="text-center space-y-1">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">로그인</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">MyShop에 오신 걸 환영해요</p>
+    <div className="shop-page flex min-h-[75svh] items-center justify-center py-10 sm:py-16">
+      <div className="grid w-full max-w-4xl gap-5 lg:grid-cols-2">
+        <aside className="relative hidden min-h-[560px] flex-col justify-between overflow-hidden rounded-3xl bg-gray-900 p-10 text-white lg:flex dark:bg-gray-800">
+          <p className="text-xs font-medium tracking-[0.24em] text-sage-200">MYSHOP · YOUR DAILY EDIT</p>
+          <div aria-hidden="true" className="absolute -right-20 top-24 size-72 rounded-full border border-sage-300/25" />
+          <div aria-hidden="true" className="absolute -right-6 top-36 size-44 rounded-full bg-sage-300/15" />
+          <div className="relative space-y-5">
+            <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-sage-200 text-2xl text-gray-900" aria-hidden="true">✳</span>
+            <p className="text-4xl font-medium leading-[1.45] tracking-tight">취향을 발견하는<br />나만의 셀렉트숍.</p>
+            <p className="max-w-xs text-sm leading-7 text-gray-300">마음에 드는 옷을 찜하고,<br />AI 스타일 진단으로 나를 알아가세요.</p>
+          </div>
+          <p className="relative text-xs tracking-wider text-gray-400">A little more you, every day.</p>
+        </aside>
+        <div className="shop-surface space-y-8 p-6 sm:p-10 lg:flex lg:flex-col lg:justify-center">
+          <div className="space-y-3">
+            <p className="shop-kicker">Welcome back</p>
+            <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-white">로그인</h1>
+            <p className="shop-muted text-sm leading-6">다시 만나 반가워요. 나의 취향을 이어가 볼까요?</p>
           </div>
 
           {signup === 'success' && (
-            <div className="px-4 py-3 bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-xl">
-              <p className="text-sm text-green-700 dark:text-green-300 text-center">
+            <div className="rounded-2xl border border-sage-200 bg-sage-100 px-4 py-4 dark:border-sage-800 dark:bg-sage-900">
+              <p className="text-sm leading-7 text-sage-800 dark:text-sage-100">
                 확인 메일을 요청했어요. 가입할 때 사용한 브라우저에서 메일의 인증 링크를 열어주세요.
               </p>
             </div>

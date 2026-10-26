@@ -12,14 +12,14 @@ interface SectionHeaderProps {
 
 export function SectionHeader({ label, title, description }: SectionHeaderProps) {
   return (
-    <div className="mb-8">
+    <div className="mb-8 space-y-3 sm:mb-10">
       {label && (
-        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">
+        <p className="shop-kicker">
           {label}
         </p>
       )}
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
-      {description && <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">{description}</p>}
+      <h1 className="shop-heading">{title}</h1>
+      {description && <p className="shop-muted text-sm leading-relaxed">{description}</p>}
     </div>
   )
 }

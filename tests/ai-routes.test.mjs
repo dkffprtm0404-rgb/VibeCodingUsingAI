@@ -70,7 +70,7 @@ for (const route of cases) {
       assert.equal(api.calls.codex.length, 1)
       assert.equal(response.headers.get('x-ai-provider'), 'codex')
       assert.equal(response.headers.get('x-ai-model'), 'gpt-6-sol')
-      assert.ok(api.calls.codex[0].systemPrompt.includes('클래식 화이트 티셔츠'))
+      assert.ok(api.calls.codex[0].systemPrompt.includes('그래픽 레이어드 스웨트셔츠'))
       assert.deepEqual((await response.json()).recommendedProducts.map((product) => product.id), [1, 2, 3])
     })
   }

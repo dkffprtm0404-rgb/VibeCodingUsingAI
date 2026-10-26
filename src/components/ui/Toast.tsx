@@ -62,12 +62,14 @@ export function ToastContainer() {
   const { toasts, remove } = useToastStore()
 
   return (
-    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none">
+    <div role="status" aria-live="polite" className="shop-toast pointer-events-none fixed left-1/2 z-[100] flex w-[calc(100%_-_2rem)] max-w-sm -translate-x-1/2 flex-col gap-2">
       {toasts.map((t) => (
-        <div
+        <button
           key={t.id}
+          type="button"
+          aria-label={`${t.message} 알림 닫기`}
           className={cn(
-            'flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-sm font-medium',
+            'flex min-h-12 items-center gap-2.5 px-4 py-3 rounded-2xl text-left text-sm font-medium',
             'pointer-events-auto cursor-pointer',
             'animate-in slide-in-from-bottom-4 duration-300',
             typeStyles[t.type]
@@ -78,7 +80,7 @@ export function ToastContainer() {
             {typeIcon[t.type]}
           </span>
           {t.message}
-        </div>
+        </button>
       ))}
     </div>
   )

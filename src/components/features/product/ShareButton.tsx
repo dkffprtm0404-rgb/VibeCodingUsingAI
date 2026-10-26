@@ -42,9 +42,10 @@ export function ShareButton({ title, text, url }: ShareButtonProps) {
 
   return (
     <button
+      type="button"
       onClick={handleShare}
       aria-label="상품 공유하기"
-      className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium w-full
+      className="flex min-h-12 items-center justify-center gap-2 px-3 py-3 rounded-2xl border text-sm font-medium w-full
                  transition-all duration-150
                  bg-white dark:bg-gray-800
                  border-gray-200 dark:border-gray-600

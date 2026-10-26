@@ -1,233 +1,73 @@
 'use client'
-/**
- * ChatBot.tsx — AI 쇼핑 도우미 챗봇
- *
- * 상품 추천 시 텍스트 + 상품 카드 형태로 표시합니다.
- */
 
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import type { Product } from '@/types/product'
+import { Icon } from '@/components/ui/Icon'
+import { useShoppingChat } from '@/hooks/useShoppingChat'
 import { formatPrice } from '@/lib/utils'
-import { ApiError, chatApi } from '@/lib/api'
 
-interface Message {
-  role: 'user' | 'assistant'
-  content: string
-  recommendedProducts?: Product[]  // 추천 상품 카드 데이터
-}
-
-const SUGGESTIONS = [
-  '따뜻한 아우터 추천해줘',
-  '5만원 이하 상품 뭐 있어?',
-  '청바지랑 어울리는 상의',
-]
+const SUGGESTIONS = ['따뜻한 아우터 추천해줘', '5만원 이하 상품 뭐 있어?', '청바지랑 어울리는 상의']
 
 export function ChatBot() {
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content: '안녕하세요! MyShop 쇼핑 도우미예요 🛍️\n어떤 상품을 찾고 계신가요?',
-    },
-  ])
-  const [input, setInput] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [loginRequired, setLoginRequired] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const dialog = useRef<HTMLDialogElement>(null)
+  const messagesEnd = useRef<HTMLDivElement>(null)
+  const { messages, input, setInput, isLoading, loginRequired, sendMessage } = useShoppingChat()
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  const sendMessage = async (content: string) => {
-    if (!content.trim() || isLoading) return
-
-    const userMessage: Message = { role: 'user', content }
-    // API에는 텍스트만 전달 (상품 카드 제외)
-    const apiMessages = [...messages, userMessage].map((m) => ({
-      role: m.role,
-      content: m.content,
-    }))
-
-    setMessages((prev) => [...prev, userMessage])
-    setInput('')
-    setIsLoading(true)
-    setLoginRequired(false)
-
-    try {
-      const data = await chatApi.send(apiMessages)
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: data.content ?? '죄송해요, 다시 시도해주세요.',
-          recommendedProducts: data.recommendedProducts ?? [],
-        },
-      ])
-    } catch (error) {
-      setLoginRequired(error instanceof ApiError && error.status === 401)
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: error instanceof ApiError ? error.message : '일시적인 오류가 발생했어요. 다시 시도해주세요 😅' },
-      ])
-    } finally {
-      setIsLoading(false)
+    const element = dialog.current
+    if (!element) return
+    if (isOpen && !element.open) element.showModal()
+    if (!isOpen && element.open) element.close()
+    if (isOpen) {
+      const original = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => { document.body.style.overflow = original }
     }
-  }
+  }, [isOpen])
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    sendMessage(input)
-  }
+  useEffect(() => {
+    if (isOpen) messagesEnd.current?.scrollIntoView({ block: 'nearest' })
+  }, [messages, isOpen])
 
   return (
     <>
-      {/* 챗봇 창 */}
-      {isOpen && (
-        <div className="fixed bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-96 max-h-[620px]
-                        bg-white dark:bg-gray-900
-                        rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700
-                        flex flex-col z-50 overflow-hidden">
-
-          {/* 헤더 — 항상 다크 */}
-          <div className="flex items-center justify-between px-4 py-3.5 bg-gray-900 text-white flex-shrink-0">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-base">🤖</div>
-              <div>
-                <p className="text-sm font-semibold">쇼핑 도우미</p>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full" />
-                  <p className="text-[10px] text-gray-400">AI가 상품을 추천해드려요</p>
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* 메시지 목록 */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
-            {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className="max-w-[85%] space-y-2">
-                  {/* 말풍선 */}
-                  <div className={`
-                    px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-line
-                    ${msg.role === 'user'
-                      ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-br-sm ml-auto'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-bl-sm'
-                    }
-                  `}>
-                    {msg.content}
-                  </div>
-
-                  {/* 추천 상품 카드 */}
-                  {msg.recommendedProducts && msg.recommendedProducts.length > 0 && (
-                    <div className="space-y-2 mt-1">
-                      {msg.recommendedProducts.map((product) => (
-                        <Link
-                          key={product.id}
-                          href={`/products/${product.id}`}
-                          onClick={() => setIsOpen(false)}
-                          className="flex gap-3 p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-gray-400 dark:hover:border-gray-400 hover:shadow-sm transition-all group"
-                        >
-                          <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0">
-                            <Image src={product.imageUrl} alt={product.name} fill sizes="56px"
-                              className="object-cover group-hover:scale-105 transition-transform duration-200" />
-                          </div>
-                          <div className="flex-1 min-w-0 flex flex-col justify-center">
-                            <p className="text-xs font-semibold text-gray-900 dark:text-white line-clamp-1">{product.name}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{product.category}</p>
-                            <p className="text-sm font-bold text-gray-900 dark:text-white mt-1">{formatPrice(product.price)}</p>
-                          </div>
-                          <div className="flex items-center text-gray-300 dark:text-gray-600 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors flex-shrink-0">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M9 18l6-6-6-6" />
-                            </svg>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-
-            {/* 로딩 인디케이터 */}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 dark:bg-gray-800 px-4 py-3 rounded-2xl rounded-bl-sm">
-                  <div className="flex gap-1 items-center">
-                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* 빠른 질문 */}
-          {messages.length === 1 && (
-            <div className="px-3 pb-2 flex flex-wrap gap-1.5 flex-shrink-0">
-              {SUGGESTIONS.map((s) => (
-                <button key={s} onClick={() => sendMessage(s)}
-                  className="text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-full transition-colors">
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* 입력창 */}
-          {loginRequired && (
-            <Link href="/login" className="px-4 py-2 text-sm font-semibold underline text-gray-900 dark:text-white">
-              로그인하고 쇼핑 도우미 이용하기
-            </Link>
-          )}
-          <form onSubmit={handleSubmit} className="flex gap-2 p-3 border-t border-gray-100 dark:border-gray-700 flex-shrink-0">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="메시지를 입력하세요..."
-              disabled={isLoading}
-              className="flex-1 px-3.5 py-2.5 text-sm rounded-xl outline-none transition-all disabled:opacity-50
-                         bg-gray-50 dark:bg-gray-800
-                         border border-gray-200 dark:border-gray-600
-                         text-gray-900 dark:text-white
-                         placeholder:text-gray-400 dark:placeholder:text-gray-500
-                         focus:border-gray-400 dark:focus:border-gray-400
-                         focus:bg-white dark:focus:bg-gray-800"
-            />
-            <button
-              type="submit"
-              disabled={!input.trim() || isLoading}
-              className="w-10 h-10 flex items-center justify-center bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl hover:bg-gray-700 dark:hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7z" />
-              </svg>
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* 플로팅 버튼 */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-4 sm:right-6 w-14 h-14 rounded-full shadow-lg z-50 flex items-center justify-center text-2xl transition-all duration-200 hover:scale-110 active:scale-95 bg-gray-900 dark:bg-white text-white dark:text-gray-900"
-        aria-label="쇼핑 도우미 열기"
-      >
-        {isOpen ? '✕' : '🤖'}
+      <button onClick={() => setIsOpen(true)} aria-label="쇼핑 도우미 열기" aria-haspopup="dialog"
+        className="shop-chat-launcher fixed right-4 z-40 flex size-14 items-center justify-center rounded-full border border-white/10 bg-gray-900 text-sage-100 shadow-lg transition-transform hover:-translate-y-1 sm:right-6 dark:bg-sage-200 dark:text-gray-900">
+        <Icon name="sparkles" className="size-6" />
       </button>
+      <dialog ref={dialog} aria-labelledby="chat-title" className="shop-chat-panel"
+        onCancel={() => setIsOpen(false)} onClose={() => setIsOpen(false)}
+        onClick={(event) => {
+          if (event.target !== event.currentTarget) return
+          const bounds = event.currentTarget.getBoundingClientRect()
+          if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) setIsOpen(false)
+        }}>
+        <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-5 py-3 dark:border-gray-700">
+          <div className="flex items-center gap-3"><span className="flex size-10 items-center justify-center rounded-2xl bg-sage-100 text-sage-800 dark:bg-sage-900 dark:text-sage-100"><Icon name="sparkles" /></span><div><h2 id="chat-title" className="text-sm font-semibold">나의 쇼핑 도우미</h2><p className="shop-muted mt-1 text-[10px]">취향에 맞는 상품을 함께 찾아요</p></div></div>
+          <button onClick={() => setIsOpen(false)} aria-label="쇼핑 도우미 닫기" className="shop-icon-button"><Icon name="close" className="size-4" /></button>
+        </div>
+        <div role="log" aria-label="상담 대화" aria-live="polite" className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
+          {messages.map((message, index) => <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className="max-w-[90%] space-y-2">
+              <div className={`rounded-2xl px-4 py-3 text-xs leading-6 whitespace-pre-line ${message.role === 'user' ? 'rounded-br-sm bg-gray-900 text-white dark:bg-sage-200 dark:text-gray-900' : 'rounded-bl-sm bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100'}`}>{message.content}</div>
+              {message.recommendedProducts?.map((product) => <Link key={product.id} href={`/products/${product.id}`} onClick={() => setIsOpen(false)} className="shop-surface flex items-center gap-3 p-3">
+                <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-gray-100"><Image src={product.imageUrl} alt="" fill sizes="56px" className="object-cover" /></div><div className="min-w-0 flex-1"><p className="truncate text-xs font-medium">{product.name}</p><p className="shop-muted mt-1 text-[11px]">{formatPrice(product.price)}</p></div><Icon name="chevron" className="size-3 shrink-0" />
+              </Link>)}
+            </div>
+          </div>)}
+          {isLoading && <p role="status" className="shop-muted flex items-center gap-2 text-xs"><Icon name="sparkles" className="size-4 animate-pulse" />어울리는 상품을 찾고 있어요...</p>}
+          <div ref={messagesEnd} />
+        </div>
+        {messages.length === 1 && <div className="shop-chat-suggestions flex shrink-0 flex-wrap gap-1.5 px-4 pb-3">{SUGGESTIONS.map((suggestion) => <button key={suggestion} onClick={() => sendMessage(suggestion)} className="min-h-11 rounded-full border border-gray-200 px-3 text-[10px] hover:bg-sage-100 dark:border-gray-700 dark:hover:bg-gray-800">{suggestion}</button>)}</div>}
+        {loginRequired && <Link href="/login" className="min-h-11 shrink-0 px-5 py-3 text-xs font-medium underline underline-offset-4">로그인하고 쇼핑 도우미 이용하기</Link>}
+        <form onSubmit={(event) => { event.preventDefault(); void sendMessage(input) }} className="flex shrink-0 gap-2 border-t border-gray-200 p-3 dark:border-gray-700">
+          <label htmlFor="shopping-message" className="sr-only">쇼핑 도우미에게 보낼 메시지</label>
+          <input id="shopping-message" type="text" value={input} onChange={(event) => setInput(event.target.value)} placeholder="어떤 상품이 궁금하세요?" disabled={isLoading} className="shop-input flex-1 disabled:opacity-50" />
+          <button type="submit" aria-label="메시지 보내기" disabled={!input.trim() || isLoading} className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gray-900 text-white disabled:opacity-35 dark:bg-sage-200 dark:text-gray-900"><Icon name="send" className="size-4" /></button>
+        </form>
+      </dialog>
     </>
   )
 }

@@ -16,12 +16,12 @@ export function HeroShaderCanvas() {
       onUnavailable={() => setUnavailable(true)}
     >
       <FlowingGradient
-        colorA="#080e20"
-        colorB="#5b4bba"
-        colorC="#1f8492"
-        colorD="#c0a1db"
-        speed={0.18}
-        distortion={0.35}
+        colorA="#14281d"
+        colorB="#496f51"
+        colorC="#8faa76"
+        colorD="#c5d6ab"
+        speed={0.12}
+        distortion={0.3}
         seed={8}
       />
     </Shader>

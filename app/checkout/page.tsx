@@ -17,11 +17,12 @@ export default async function CheckoutPage() {
   const userName = user.user_metadata?.name ?? ''
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">주문/결제</h1>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">배송지 정보를 입력하고 주문을 완료해주세요</p>
-      </div>
+    <div className="shop-page py-10 sm:py-14">
+      <header className="mb-8 space-y-3 sm:mb-10">
+        <p className="shop-kicker">A little closer to yours</p>
+        <h1 className="shop-heading">주문/결제</h1>
+        <p className="shop-muted text-sm">배송지 정보를 입력하고 주문을 완료해주세요.</p>
+      </header>
       <CheckoutForm userName={userName} />
     </div>
   )

@@ -11,7 +11,7 @@ export function ThemeToggle() {
   const mounted = useHydrated()
 
   // Hydration 오류 방지 — 클라이언트에서만 렌더링
-  if (!mounted) return <div className="w-9 h-9" />
+  if (!mounted) return <div className="size-11" />
 
   const isDark = resolvedTheme === 'dark'
 
@@ -19,10 +19,7 @@ export function ThemeToggle() {
     <button
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
       aria-label={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
-      className="w-9 h-9 flex items-center justify-center rounded-lg
-                 hover:bg-gray-100 dark:hover:bg-gray-800
-                 text-gray-600 dark:text-gray-400
-                 transition-colors duration-150"
+      className="shop-icon-button text-gray-600 dark:text-gray-300"
     >
       {isDark ? (
         // 라이트 모드 아이콘 (해)

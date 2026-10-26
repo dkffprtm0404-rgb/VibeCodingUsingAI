@@ -5,6 +5,7 @@
  */
 
 import { API_ROUTES } from '@/constants'
+import { setPersonalizationIdentity } from '@/lib/personalization'
 import type { Product } from '@/types/product'
 import type { StyleQuizAnswer, StyleResult } from '@/types/style'
 
@@ -34,8 +35,12 @@ export const authApi = {
     fetchApi<{ requireEmailConfirmation: true }>(API_ROUTES.AUTH.SIGNUP, {
       method: 'POST', body: JSON.stringify({ name, email, password }),
     }),
-  logout: () =>
-    fetchApi<{ success: boolean }>(API_ROUTES.AUTH.LOGOUT, { method: 'POST' }),
+  logout: async () => {
+    const response = await fetchApi<{ success: boolean }>(API_ROUTES.AUTH.LOGOUT, { method: 'POST' })
+    if (response.success !== true) throw new ApiError(502, '로그아웃하지 못했어요. 다시 시도해주세요.')
+    setPersonalizationIdentity(null)
+    return response
+  },
 }
 
 export const wishlistApi = {
